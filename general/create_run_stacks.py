@@ -118,6 +118,7 @@ def get_stackrun_status(org_id, wfgrp_id, stack_id, stackrun_id):
     response = get_wfruns_in_stackrun(org_id, wfgrp_id, stack_id, stackrun_id)
     response = json.loads(response)
     if "LatestStatus" in response["msg"]:
+        print(response["msg"]["LatestStatus"])
         return response["msg"]["LatestStatus"]
     else:
         return False
