@@ -65,7 +65,7 @@ def get_wfruns_in_stackrun(org_id, wfgrp_id, stack_id, stackrun_id):
         + stackrun_id
     )
     headers = {
-        "Authorization": test_api_token,
+        "Authorization": "apikey " + api_token,
         "Content-Type": "application/json",
     }
     req = urllib.request.Request(
