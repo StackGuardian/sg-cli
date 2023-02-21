@@ -21,6 +21,7 @@ if not org:
     print("No Org provided. Expecting it in \"SG_ORG\" environment variable")
     exit(1)
 
+
 def create_stack(org_id, wfgrp_id, payload, runOnCreate=True):
     url = (
         api_url
@@ -40,6 +41,38 @@ def create_stack(org_id, wfgrp_id, payload, runOnCreate=True):
         data=json.dumps(payload).encode("utf-8"),
         headers=headers,
         method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req) as response:
+            return response.read().decode()
+    except urllib.error.HTTPError as e:
+        print("==Stack creation failed==")
+        print("url: ", e.url)
+        print("status: ", e.status)
+        print("message: ", e.read().decode())
+        return False
+
+
+def get_wfruns_in_stackrun(org_id, wfgrp_id, stack_id, stackrun_id):
+    url = (
+        api_url
+        + "/orgs/"
+        + org_id
+        + "/wfgrps/"
+        + wfgrp_id
+        + "/stacks/"
+        + stack_id
+        + stackrun_id
+    )
+    headers = {
+        "Authorization": test_api_token,
+        "Content-Type": "application/json",
+    }
+    req = urllib.request.Request(
+        url=url,
+        # data=json.dumps(payload).encode("utf-8"),
+        headers=headers,
+        method="GET",
     )
     try:
         with urllib.request.urlopen(req) as response:
@@ -76,6 +109,22 @@ def get_stack_status(org_id, wfgrp_id, stack_id):
     response = json.loads(response)
     if "msg" in response and "LatestWfStatus" in response["msg"]:
         return response["msg"]["LatestWfStatus"]
+    else:
+        return False
+
+
+def get_stackrun_status(org_id, wfgrp_id, stack_id, stackrun_id):
+    # make an api call to base url using GET method
+    response = get_wfruns_in_stackrun(org_id, wfgrp_id, stack_id, stackrun_id)
+    response = json.loads(response)
+    lastestWf = {}
+    latestCreatedAt = 0
+    if "msg" in response and len(response["msg"]) > 0:
+        for wfrun in response["msg"]:
+            if wfrun.get("CreatedAt") > latestCreatedAt:
+                lastestWf = wfrun
+                latestCreatedAt = wfrun.get("CreatedAt")
+        return lastestWf.get("LatestStatus")
     else:
         return False
 
@@ -312,7 +361,8 @@ def main():
 
     # get a stack
     stack_id = response.get("data").get("stack").get("ResourceName")
-    while get_stack_status(org_id, wfgrp_id, stack_id) not in [
+    stack_run_id = response.get("data").get("stack").get("stackRunId")
+    while get_stackrun_status(org_id, wfgrp_id, stack_id, stack_run_id) not in [
         "ERRORED",
         "COMPLETED",
         "APPROVAL_REQUIRED",
