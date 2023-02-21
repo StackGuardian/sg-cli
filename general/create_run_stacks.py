@@ -117,14 +117,8 @@ def get_stackrun_status(org_id, wfgrp_id, stack_id, stackrun_id):
     # make an api call to base url using GET method
     response = get_wfruns_in_stackrun(org_id, wfgrp_id, stack_id, stackrun_id)
     response = json.loads(response)
-    lastestWf = {}
-    latestCreatedAt = 0
-    if "msg" in response and len(response["msg"]) > 0:
-        for wfrun in response["msg"]:
-            if wfrun.get("CreatedAt") > latestCreatedAt:
-                lastestWf = wfrun
-                latestCreatedAt = wfrun.get("CreatedAt")
-        return lastestWf.get("LatestStatus")
+    if "LatestStatus" in response["msg"]:
+        return response["msg"]["LatestStatus"]
     else:
         return False
 
@@ -361,7 +355,7 @@ def main():
 
     # get a stack
     stack_id = response.get("data").get("stack").get("ResourceName")
-    stack_run_id = response.get("data").get("stack").get("stackRunId")
+    stack_run_id = response.get("data").get("stack").get("StackRunId")
     while get_stackrun_status(org_id, wfgrp_id, stack_id, stack_run_id) not in [
         "ERRORED",
         "COMPLETED",
