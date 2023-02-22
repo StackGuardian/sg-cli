@@ -3,7 +3,7 @@ import requests
 
 base_url = "https://api.app.stackguardian.io/api/v1"
 base_url = "http://localhost:8000/api/v1"
-api_token = "sgu_11WGj2WXTyCkKRI3KeTbo"
+api_token = ""
 
 
 def create_stack(org_id, wfgrp_id, payload, runOnCreate=True):
@@ -19,7 +19,7 @@ def create_stack(org_id, wfgrp_id, payload, runOnCreate=True):
     print("url: ", url)
     headers = {
         "Authorization": "apikey " + api_token,
-        "PrincipalId": "akshat.tandon@stackguardian.iu=o",
+        "PrincipalId": "",
     }
     response = requests.post(url, json=payload, headers=headers)
     return response
