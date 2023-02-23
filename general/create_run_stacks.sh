@@ -29,8 +29,17 @@ while [ $# -gt 0 ]; do
             readonly workflow_group="$2"
             shift 2
             ;;
+        --wait)
+            readonly wait_execution=true
+            shift
+            ;;
         --)
             shift
+            if [ $# -gt 1 ]; then
+              echo
+              echo "Error: only file name should be provided after --"
+              exit 1
+            fi
             readonly payload="$1"
             break
             ;;
@@ -154,12 +163,14 @@ main() {
     fi
 
     # check stackrun status
-    while [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "ERRORED" ] \
-        && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "COMPLETED" ] \
-        && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "APPROVAL_REQUIRED" ]; do
-        echo "Stack under deployment"
-        sleep 5
-    done
+    if [ "$wait_execution" ]; then
+      while [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "ERRORED" ] \
+          && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "COMPLETED" ] \
+          && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "APPROVAL_REQUIRED" ]; do
+          echo "Stack under deployment"
+          sleep 5
+      done
+    fi
 
     # print final stack status
     echo "Stack finished with $(get_stack_status "$org_id" "$wfgrp_id" "$stack_id") status"
