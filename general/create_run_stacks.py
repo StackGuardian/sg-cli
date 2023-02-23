@@ -34,7 +34,7 @@ def create_stack(org_id, wfgrp_id, payload, runOnCreate=True):
         + "/wfgrps/"
         + wfgrp_id
         + "/stacks/?runOnCreate="
-        + str(runOnCreate)
+        + str(runOnCreate)  # parametrize runOnCreate
     )
     headers = {
         "PrincipalId": "",
@@ -134,9 +134,9 @@ def get_stackrun_status(org_id, wfgrp_id, stack_id, stackrun_id):
 def main():
     # create a stack
     org_id = org
-    wfgrp_id = "azure-stae3ck-wfs-demo"
+    wfgrp_id = "azure-stae3ck-wfs-demo" # parametrize
     payload = """{
-    "ResourceName": "test-dedffeeed-j3e33456",
+    "ResourceName": "test-dedffeeed-j3e33456", # parametrize
     "TemplatesConfig": {
         "templateGroupId": "/demo-org/azure-stack-demo:1",
         "templates": [
@@ -169,7 +169,7 @@ def main():
                     "iacInputData": {
                         "schemaType": "RAW_JSON",
                         "data": {
-                            "vnet_name": "wfdemo",
+                            "vnet_name": "wfdemo", # parametrize but how?
                             "subnet_enforce_private_link_service_network_policies": {},
                             "subnet_prefixes": [
                                 "192.16.0.0/24",
@@ -408,7 +408,7 @@ def main():
         sleep(5)
     else:
         print(
-            f"Stack finished with {get_stack_status(org_id, wfgrp_id, stack_id)} status. Find more info here:"
+            f"Stack finished with {get_stack_status(org_id, wfgrp_id, stack_id)} status"
         )
         exit()
 
