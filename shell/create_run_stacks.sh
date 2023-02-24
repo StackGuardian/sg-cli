@@ -9,10 +9,10 @@ readonly api_token="$SG_API_TOKEN"
 help() {
   cat <<EOF
 
-  /bin/sh $(basename "$0") OPTIONS --org <ORG_NAME> --workflow_group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
+  /bin/sh $(basename "$0") OPTIONS --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
 
   OPTIONS:
-    --wait              wait for stack creation
+    --wait              wait for stack creation, applicable only with --run
     --run               run stack after creation
 EOF
 }
@@ -161,17 +161,18 @@ main() {
         stack_id=$(echo "$response" | jq -r '.data.stack.ResourceName')
         stack_run_id=$(echo "$response" | jq -r '.data.stack.StackRunId')
         echo "Stack created"
-        echo "$base_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
+        echo "$dashboard_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
     else
         exit 1
     fi
 
     # check stackrun status
-    if [ "$wait_execution" = "true" ]; then
+    if [ "$wait_execution" = "true" ] && [ "$run_on_create" = "true" ]; then
+      echo "Stack run executed"
       while [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "ERRORED" ] \
           && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "COMPLETED" ] \
           && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "APPROVAL_REQUIRED" ]; do
-          echo "Stack under deployment"
+          echo -r "Stack under deployment..."
           sleep 5
       done
     fi
