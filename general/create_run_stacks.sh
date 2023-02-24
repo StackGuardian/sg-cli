@@ -75,7 +75,6 @@ create_stack() {
       -d @"$payload" "$url")
     if [ $? -eq 0 ] && echo "$response" | grep -q "\"data\""; then
       echo "$response"
-      exit 0
     else
       echo "== Stack creation failed =="
       echo "url: $url"
