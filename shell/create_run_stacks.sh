@@ -178,8 +178,13 @@ main() {
     fi
 
     # print final stack status
-    echo "Stack finished with $(get_stack_status "$org_id" "$wfgrp_id" "$stack_id") status"
-    exit 0
+    if [ "$wait_execution" = "true" ] && [ "$run_on_create" = "true" ]; then
+      echo "Stack finished with $(get_stack_status "$org_id" "$wfgrp_id" "$stack_id") status"
+      exit 0
+    else
+      echo "Stack created. To run it go to the Dashboard!"
+      exit 0
+    fi
 }
 
 # run main function
