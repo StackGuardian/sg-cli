@@ -9,8 +9,9 @@ readonly api_token="$SG_API_TOKEN"
 help() {
   cat <<EOF
 
-  $(basename "$0") --org <ORG_NAME> --workflow_group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
-  optional:
+  /bin/sh $(basename "$0") OPTIONS --org <ORG_NAME> --workflow_group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
+
+  OPTIONS:
     --wait              wait for stack creation
     --run               run stack after creation
 EOF
