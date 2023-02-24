@@ -6,6 +6,12 @@ readonly api_url="$base_url/api/v1"
 readonly dashboard_url="${SG_DASHBOARD_URL:-"https://app.stackguardian.io/orchestrator"}"
 readonly api_token="$SG_API_TOKEN"
 
+if ! type jq >/dev/null 2>&1; then
+  echo
+  echo "ERROR: jq command is required!"
+  exit 2
+fi
+
 help() {
   cat <<EOF
 
@@ -50,14 +56,14 @@ while [ $# -gt 0 ]; do
             shift
             if [ $# -gt 1 ]; then
               echo
-              echo "Error: only file name should be provided after --"
+              echo "ERROR: only file name should be provided after --"
               exit 1
             fi
             readonly payload="$1"
             break
             ;;
         *)
-            echo "Error: unknown option $1" >&2
+            echo "ERROR: unknown option $1" >&2
             exit 1
             ;;
     esac
