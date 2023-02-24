@@ -12,7 +12,7 @@ help() {
   /bin/sh $(basename "$0") OPTIONS --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
 
   OPTIONS:
-    --wait              wait for stack creation, applicable only with --run
+    --wait              wait for stack creation, applicable only when --run is set
     --run               run stack after creation
 EOF
 }
