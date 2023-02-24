@@ -172,7 +172,7 @@ main() {
       while [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "ERRORED" ] \
           && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "COMPLETED" ] \
           && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "APPROVAL_REQUIRED" ]; do
-          echo -r "Stack under deployment..."
+          echo "Stack under deployment..."
           sleep 5
       done
     fi
