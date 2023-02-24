@@ -1,5 +1,5 @@
 {
-  "ResourceName": "test-stack",
+  "ResourceName": "test-stack5",
   "TemplatesConfig": {
       "templateGroupId": "/demo-org/azure-stack-demo:1",
       "templates": [

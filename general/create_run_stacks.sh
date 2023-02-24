@@ -73,13 +73,15 @@ create_stack() {
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
       -d @"$payload" "$url")
-    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
-        echo "== Stack creation failed =="
-        echo "url: $url"
-        echo "response: $response"
-        return 1
+    if [ $? -eq 0 ] && echo "$response" | grep -q "\"data\""; then
+      echo "$response"
+      exit 0
+    else
+      echo "== Stack creation failed =="
+      echo "url: $url"
+      echo "response: $response"
+      exit 1
     fi
-    echo "$response"
 }
 
 get_wfruns_in_stackrun() {
@@ -97,7 +99,7 @@ get_wfruns_in_stackrun() {
         echo "== Retrieving Workflow Run from StackRun failed =="
         echo "url: $url"
         echo "response: $response"
-        return 1
+        exit 1
     fi
     echo "$response"
 }
@@ -116,7 +118,7 @@ get_stack() {
         echo "== Retrieving Stack failed =="
         echo "url: $url"
         echo "response: $response"
-        return 1
+        exit 1
     fi
     echo "$response"
 }
@@ -152,7 +154,10 @@ main() {
     org_id=$org
     wfgrp_id="$workflow_group"
     response=$(create_stack "$org_id" "$wfgrp_id")
-    echo "$response"
+    if [ $? -ne 0 ]; then
+      echo "$response"
+      exit 1
+    fi
     if [ "$response" != "" ]; then
         stack_id=$(echo "$response" | jq -r '.data.stack.ResourceName')
         stack_run_id=$(echo "$response" | jq -r '.data.stack.StackRunId')
