@@ -14,6 +14,7 @@ help() {
   OPTIONS:
     --wait              wait for stack creation, applicable only when --run is set
     --run               run stack after creation
+    --resource-name     patch payload ResourceName with custom name
 EOF
 }
 
@@ -31,6 +32,10 @@ while [ $# -gt 0 ]; do
             ;;
         --workflow-group)
             readonly workflow_group="$2"
+            shift 2
+            ;;
+        --resource-name)
+            readonly resource_name="$2"
             shift 2
             ;;
         --wait)
@@ -68,6 +73,10 @@ create_stack() {
     wfgrp_id=$2
     runOnCreate=${run_on_create:-false}
     url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/?runOnCreate=$runOnCreate"
+    if [ -n "$resource_name" ]; then
+      jq ".ResourceName = \"$resource_name\"" "$payload" > "$payload".new
+      mv "$payload".new "$payload" && rm -f "$payload".new
+    fi
     response=$(curl -s --http1.1 -X POST \
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey $api_token" \
