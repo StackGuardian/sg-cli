@@ -10,6 +10,9 @@ help() {
   cat <<EOF
 
   $(basename "$0") --org <ORG_NAME> --workflow_group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
+  optional:
+    --wait              wait for stack creation
+    --run               run stack after creation
 EOF
 }
 
@@ -31,6 +34,10 @@ while [ $# -gt 0 ]; do
             ;;
         --wait)
             readonly wait_execution=true
+            shift
+            ;;
+        --run)
+            readonly run_on_create=true
             shift
             ;;
         --)
@@ -58,15 +65,13 @@ fi
 create_stack() {
     org_id=$1
     wfgrp_id=$2
-    runOnCreate=${3:-true}
+    runOnCreate=${run_on_create:-false}
     url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/?runOnCreate=$runOnCreate"
-    headers=$(cat <<EOF
-PrincipalId: ""
-Authorization: apikey $api_token
-Content-Type: application/json
-EOF
-)
-    response=$(curl -s --http1.1 -X POST -H "$headers" -d @"$payload" "$url")
+    response=$(curl -s --http1.1 -X POST \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      -d @"$payload" "$url")
     if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
         echo "== Stack creation failed =="
         echo "url: $url"
@@ -82,13 +87,11 @@ get_wfruns_in_stackrun() {
     stack_id=$3
     stackrun_id=$4
     url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id/$stackrun_id"
-    headers=$(cat <<EOF
-PrincipalId: ""
-Authorization: apikey $api_token
-Content-Type: application/json
-EOF
-)
-    response=$(curl -s --http1.1 -X GET -H "$headers" "$url")
+    response=$(curl -s --http1.1 -X GET \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
     if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
         echo "== Retrieving Workflow Run from StackRun failed =="
         echo "url: $url"
@@ -103,13 +106,11 @@ get_stack() {
     wfgrp_id=$2
     stack_id=$3
     url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
-    headers=$(cat <<EOF
-PrincipalId: ""
-Authorization: apikey $api_token
-Content-Type: application/json
-EOF
-)
-    response=$(curl -s --http1.1 -X GET -H "$headers" "$url")
+    response=$(curl -s --http1.1 -X GET \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
     if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
         echo "== Retrieving Stack failed =="
         echo "url: $url"
@@ -124,7 +125,6 @@ get_stack_status() {
   wfgrp_id=$2
   stack_id=$3
   response=$(get_stack "$org_id" "$wfgrp_id" "$stack_id")
-  response=$(echo "$response" | jq)
   if echo "$response" | grep -q '"msg":' && echo "$response" | grep -q '"LatestWfStatus":'; then
     echo "$response" | jq -r '.msg.LatestWfStatus'
   else
@@ -138,7 +138,6 @@ get_stackrun_status() {
   stack_id=$3
   stackrun_id=$4
   response=$(get_wfruns_in_stackrun "$org_id" "$wfgrp_id" "$stack_id" "$stackrun_id")
-  response=$(echo "$response" | jq)
   if echo "$response" | grep -q '"LatestStatus":'; then
     echo "$response" | jq -r '.msg.LatestStatus'
   else
@@ -157,13 +156,13 @@ main() {
         stack_id=$(echo "$response" | jq -r '.data.stack.ResourceName')
         stack_run_id=$(echo "$response" | jq -r '.data.stack.StackRunId')
         echo "Stack created"
-        echo "https://$base_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
+        echo "$base_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
     else
         exit 1
     fi
 
     # check stackrun status
-    if [ "$wait_execution" ]; then
+    if [ "$wait_execution" = "true" ]; then
       while [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "ERRORED" ] \
           && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "COMPLETED" ] \
           && [ "$(get_stackrun_status "$org_id" "$wfgrp_id" "$stack_id" "$stack_run_id")" != "APPROVAL_REQUIRED" ]; do
