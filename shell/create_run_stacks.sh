@@ -275,8 +275,6 @@ patch_payload() {
       fi
     else
       payload="$(echo "${payload}" | jq "${2}.${key} = \"$(echo "${json_patch}" | jq -r "${2}.${key}")\"")"
-      # echo "key: ${2}.${key}"
-      # echo "value: $(echo "${json_patch}" | jq -r "${2}.${key}")"
     fi
   done
 }
