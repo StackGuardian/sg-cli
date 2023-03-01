@@ -15,81 +15,43 @@ fi
 help() {
   cat <<EOF
 
-  /bin/sh $(basename "$0") OPTIONS --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> -- <JSON_PAYLOAD_PATH>
+  ./$(basename "$0") SERVICE --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS
+
+  SERVICES:
+    stack
+
+  OPTIONS:
+    create              create new stack
+
+EOF
+}
+
+stack_help() {
+  cat <<EOF
+
+  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
+
+  OPTIONS:
+    create              create new stack
+
+EOF
+}
+
+stack_create_help() {
+  cat <<EOF
+
+  ./$(basename "$0") stack create --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
 
   OPTIONS:
     --wait              wait for stack creation, applicable only when --run is set
     --run               run stack after creation
     --preview           preview payload before applying
     --dry-run           preview payload before applying (but do not create)
-    --resource-name     patch payload ResourceName (workflow-stack name) with custom name
-    --patch             patch original json payload
+    --stack-name        set stack name, can not be used with --patch-payload
+    --patch-payload     patch original json payload
 
-  NOTE: --resource-name and --patch can not work together, --patch is higher that --resource-name
 EOF
 }
-
-if [ $# -lt 6 ]; then
-  help
-  exit 1
-fi
-
-# Parse command-line arguments
-while [ $# -gt 0 ]; do
-    case "$1" in
-        --org)
-            readonly org="$2"
-            shift 2
-            ;;
-        --workflow-group)
-            readonly workflow_group="$2"
-            shift 2
-            ;;
-        --resource-name)
-            readonly resource_name="$2"
-            shift 2
-            ;;
-        --wait)
-            readonly wait_execution=true
-            shift
-            ;;
-        --run)
-            readonly run_on_create=true
-            shift
-            ;;
-        --patch)
-            readonly json_patch="$2"
-            shift 2
-            ;;
-        --preview)
-            readonly preview_patch=true
-            shift
-            ;;
-        --dry-run)
-            readonly dry_run=true
-            shift
-            ;;
-        --)
-            shift
-            if [ $# -gt 1 ]; then
-              echo
-              echo "ERROR: only file name should be provided after --"
-              exit 1
-            fi
-            payload="$(cat "$1")"
-            break
-            ;;
-        *)
-            echo "ERROR: unknown option $1" >&2
-            exit 1
-            ;;
-    esac
-done
-
-if [ -z "$api_token" ] || [ "sgu_" != "${api_token:0:4}" ]; then
-    echo "Invalid or no API Token provided. Expecting it in \"SG_API_TOKEN\" environment variable. Navigate to StackGuardian platform to get your api token: $dashboard_url/orgs/$org/settings?tab=api_key"
-    exit 1
-fi
 
 create_stack() {
     org_id=$1
@@ -176,7 +138,7 @@ get_stackrun_status() {
 }
 
 # main function
-main() {
+stack_create_main() {
     # create a stack
     org_id=$org
     wfgrp_id="$workflow_group"
@@ -278,5 +240,88 @@ patch_payload() {
   done
 }
 
-# run main function
-main "$@"
+if [ -z "$api_token" ] || [ "sgu_" != "${api_token:0:4}" ]; then
+    echo "Invalid or no API Token provided. Expecting it in \"SG_API_TOKEN\" environment variable. Navigate to StackGuardian platform to get your api token: $dashboard_url/orgs/$org/settings?tab=api_key"
+    exit 1
+fi
+
+case "$1" in
+  stack)
+    service="$1"
+    case "$2" in
+      create)
+        service_option="$2"
+        shift 2
+        ;;
+      *)
+        echo "ERROR: unknown option $2" >&2
+        stack_help
+        exit 1
+    esac
+    ;;
+  *)
+    echo "ERROR: unknown service $1" >&2
+    help
+    exit 1
+    ;;
+esac
+
+if [ $# -lt 6 ]; then
+  "${service}"_"${service_option}"_help
+  exit 1
+fi
+
+# Parse command-line arguments
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --org)
+      readonly org="$2"
+      shift 2
+      ;;
+    --workflow-group)
+      readonly workflow_group="$2"
+      shift 2
+      ;;
+    --resource-name)
+      readonly resource_name="$2"
+      shift 2
+      ;;
+    --wait)
+      readonly wait_execution=true
+      shift
+      ;;
+    --run)
+      readonly run_on_create=true
+      shift
+      ;;
+    --patch-payload)
+      readonly json_patch="$2"
+      shift 2
+      ;;
+    --preview)
+      readonly preview_patch=true
+      shift
+      ;;
+    --dry-run)
+      readonly dry_run=true
+      shift
+      ;;
+    --)
+      shift
+      if [ $# -gt 1 ]; then
+        echo
+        echo "ERROR: only file name should be provided after --"
+        exit 1
+      fi
+      payload="$(cat "$1")"
+      break
+      ;;
+    *)
+      echo "ERROR: unknown option $1" >&2
+      "${service}"_"${service_option}"_help
+      exit 1
+      ;;
+  esac
+done
+
+"${service}"_"${service_option}"_main
