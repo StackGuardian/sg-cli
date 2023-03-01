@@ -187,10 +187,10 @@ main() {
       patch_payload "$(get_root_patch_keys)"
     fi
     if [ "${dry_run}" = "true" ]; then
-      echo "${payload}"
+      echo "${payload}" | jq
       exit 0
     elif [ "${preview_patch}" = "true" ]; then
-      echo "${payload}"
+      echo "${payload}" | jq
     fi
 
     response=$(create_stack "$org_id" "$wfgrp_id")
@@ -251,7 +251,7 @@ fetch_patch_array_length() {
   echo "${json_patch}" | jq "$1 | length"
 }
 
-patch_paylaod_array() {
+patch_payload_array() {
   array_length=$(($(fetch_patch_array_length "$1")-1))
   if [ "${array_length}" -lt 0 ]; then
     payload="$(echo "${payload}" | jq "${1} = []")"
@@ -269,7 +269,7 @@ patch_payload() {
     # echo "patch: ${2}.${key}"
     if check_patch_subkey "${2}.${key}" >/dev/null 2>&1; then
       if [ "$(is_sub_patch_key_array "${2}.${key}")" = "yes" ]; then
-        patch_paylaod_array "${2}.${key}"
+        patch_payload_array "${2}.${key}"
       else
         patch_payload "$(get_sub_patch_keys "${2}.${key}")" "${2}.${key}"
       fi
