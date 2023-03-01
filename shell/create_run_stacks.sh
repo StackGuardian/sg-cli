@@ -20,7 +20,12 @@ help() {
   OPTIONS:
     --wait              wait for stack creation, applicable only when --run is set
     --run               run stack after creation
-    --resource-name     patch payload ResourceName with custom name
+    --preview           preview payload before applying
+    --dry-run           preview payload before applying (but do not create)
+    --resource-name     patch payload ResourceName (workflow-stack name) with custom name
+    --patch             patch original json payload
+
+  NOTE: --resource-name and --patch can not work together, --patch is higher that --resource-name
 EOF
 }
 
@@ -52,6 +57,18 @@ while [ $# -gt 0 ]; do
             readonly run_on_create=true
             shift
             ;;
+        --patch)
+            readonly json_patch="$2"
+            shift 2
+            ;;
+        --preview)
+            readonly preview_patch=true
+            shift
+            ;;
+        --dry-run)
+            readonly dry_run=true
+            shift
+            ;;
         --)
             shift
             if [ $# -gt 1 ]; then
@@ -59,7 +76,7 @@ while [ $# -gt 0 ]; do
               echo "ERROR: only file name should be provided after --"
               exit 1
             fi
-            readonly payload="$1"
+            payload="$(cat "$1")"
             break
             ;;
         *)
@@ -79,17 +96,13 @@ create_stack() {
     wfgrp_id=$2
     runOnCreate=${run_on_create:-false}
     url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/?runOnCreate=$runOnCreate"
-    if [ -n "$resource_name" ]; then
-      jq ".ResourceName = \"$resource_name\"" "$payload" > "$payload".new
-      mv "$payload".new "$payload" && rm -f "$payload".new
-    fi
     response=$(curl -s --http1.1 -X POST \
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
-      -d @"$payload" "$url")
+      --data-raw "${payload}" "$url")
     if [ $? -eq 0 ] && echo "$response" | grep -q "\"data\""; then
-      echo "$response"
+      echo "$response" | jq
     else
       echo "== Stack creation failed =="
       echo "url: $url"
@@ -167,6 +180,19 @@ main() {
     # create a stack
     org_id=$org
     wfgrp_id="$workflow_group"
+
+    if [ -n "$resource_name" ] && [ -z "$json_patch" ]; then
+      payload=$(echo "${payload}" | jq ".ResourceName = \"$resource_name\"")
+    elif [ -n "$json_patch" ]; then
+      patch_payload "$(get_root_patch_keys)"
+    fi
+    if [ "${dry_run}" = "true" ]; then
+      echo "${payload}"
+      exit 0
+    elif [ "${preview_patch}" = "true" ]; then
+      echo "${payload}"
+    fi
+
     response=$(create_stack "$org_id" "$wfgrp_id")
     if [ $? -ne 0 ]; then
       echo "$response"
@@ -202,6 +228,58 @@ main() {
     fi
 }
 
+check_patch_subkey() {
+  if echo "${json_patch}" | jq -r "$1 | keys_unsorted[]"; then
+    return 0
+  fi
+  return 1
+}
+
+get_root_patch_keys()  {
+  echo "${json_patch}" | jq -r "keys_unsorted[]"
+}
+
+get_sub_patch_keys() {
+  echo "${json_patch}" | jq -r "$1 | keys_unsorted[]"
+}
+
+is_sub_patch_key_array() {
+  echo "${json_patch}" | jq -r "$1 | if type==\"array\" then \"yes\" else \"no\" end"
+}
+
+fetch_patch_array_length() {
+  echo "${json_patch}" | jq "$1 | length"
+}
+
+patch_paylaod_array() {
+  array_length=$(($(fetch_patch_array_length "$1")-1))
+  if [ "${array_length}" -lt 0 ]; then
+    payload="$(echo "${payload}" | jq "${1} = []")"
+    return 0
+  fi
+  until [ $array_length -lt 0 ]; do
+    patch_payload "$(get_sub_patch_keys "${1}[${array_length}]")" "${1}[${array_length}]"
+    array_length=$((array_length-1))
+  done
+}
+
+patch_payload() {
+  root_keys="$1"
+  for key in ${root_keys}; do
+    # echo "patch: ${2}.${key}"
+    if check_patch_subkey "${2}.${key}" >/dev/null 2>&1; then
+      if [ "$(is_sub_patch_key_array "${2}.${key}")" = "yes" ]; then
+        patch_paylaod_array "${2}.${key}"
+      else
+        patch_payload "$(get_sub_patch_keys "${2}.${key}")" "${2}.${key}"
+      fi
+    else
+      payload="$(echo "${payload}" | jq "${2}.${key} = \"$(echo "${json_patch}" | jq -r "${2}.${key}")\"")"
+      # echo "key: ${2}.${key}"
+      # echo "value: $(echo "${json_patch}" | jq -r "${2}.${key}")"
+    fi
+  done
+}
+
 # run main function
 main "$@"
-
