@@ -80,7 +80,7 @@ Payload from before will have updated:
 ```
 
 Example 3: (patch anything inside payload.json)
-> make sure to surround patch json in single quotes '', and each key and value with ""
+> make sure to surround patch json in single quotes `''`, and each key and value with `""`
 ```
 ./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --patch '{"ResourceName": "custom_name", "TemplatesConfig": {"templates": [{"ResourceName": "first_item"}]}}' -- payload.json
 ```
@@ -102,6 +102,22 @@ Paylod will look like the following:
         "ResourceName": "azure_aks-Wngq"
       }
     ]
+  }
+}
+```
+
+Example 4: (unset array)
+```
+./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --patch '{"TemplatesConfig": {"templates": []}}' -- payload.json
+```
+Payload will look like the follwing:
+> when array is set to `[]`, it will use default value
+```
+{
+  "ResourceName": "test",
+  "TemplatesConfig": {
+    "templateGroupId": "/demo-org/azure-stack-demo:1",
+    "templates": []
   }
 }
 ```
