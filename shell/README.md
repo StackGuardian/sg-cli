@@ -121,3 +121,17 @@ Payload will look like the follwing:
   }
 }
 ```
+
+Example 5: (add new key)
+```
+./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --patch '{"custom_key": "custom_value"}' -- payload.json
+```
+Payload will look like the follwing:
+> new key/value will be added to payload
+```
+{
+  "ResourceName": "test",
+  ...
+  "custom_key": "custom_value"
+}
+```
