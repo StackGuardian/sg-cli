@@ -266,7 +266,6 @@ patch_payload_array() {
 patch_payload() {
   root_keys="$1"
   for key in ${root_keys}; do
-    # echo "patch: ${2}.${key}"
     if check_patch_subkey "${2}.${key}" >/dev/null 2>&1; then
       if [ "$(is_sub_patch_key_array "${2}.${key}")" = "yes" ]; then
         patch_payload_array "${2}.${key}"
