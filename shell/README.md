@@ -18,7 +18,7 @@ Payload holds information about `ResourceName`, `TemplateConfig` and so on.
 
 When running just
 ```
-./create_run_stacks.sh
+./sg-cli stack create
 ```
 help menu will be shown with more details.
 
@@ -33,8 +33,8 @@ and optional like:
 --run
 --preview
 --dry-run
---resource-name
---patch
+--stack-name
+--patch-payload
 ```
 JSON payload is passed at the end of all arguments after `--`.
 Only one arguments is accepted after `--`, providing more will result in error.
@@ -63,12 +63,12 @@ If we have payload like following
 
 Example 1: (simple run with prefilled payload.json)
 ```
-./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp -- payload.json
+./sg-cli stack create --org demo-org --workflow-group integration-wfgrp -- payload.json
 ```
 
 Example 2: (override ResourceName (workflow-stack name))
 ```
-./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --resourceName custom_name -- payload.json
+./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --resourceName custom_name -- payload.json
 
 ```
 Payload from before will have updated:
@@ -82,7 +82,7 @@ Payload from before will have updated:
 Example 3: (patch anything inside payload.json)
 > make sure to surround patch json in single quotes `''`, and each key and value with `""`
 ```
-./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --patch '{"ResourceName": "custom_name", "TemplatesConfig": {"templates": [{"ResourceName": "first_item"}]}}' -- payload.json
+./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"ResourceName": "custom_name", "TemplatesConfig": {"templates": [{"ResourceName": "first_item"}]}}' -- payload.json
 ```
 Paylod will look like the following:
 ```
@@ -108,7 +108,7 @@ Paylod will look like the following:
 
 Example 4: (unset array)
 ```
-./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --patch '{"TemplatesConfig": {"templates": []}}' -- payload.json
+./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"TemplatesConfig": {"templates": []}}' -- payload.json
 ```
 Payload will look like the follwing:
 > when array is set to `[]`, it will use default value
@@ -124,7 +124,7 @@ Payload will look like the follwing:
 
 Example 5: (add new key)
 ```
-./create_run_stacks.sh --org demo-org --workflow-group integration-wfgrp --patch '{"custom_key": "custom_value"}' -- payload.json
+./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"custom_key": "custom_value"}' -- payload.json
 ```
 Payload will look like the follwing:
 > new key/value will be added to payload
