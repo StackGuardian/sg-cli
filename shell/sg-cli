@@ -78,7 +78,7 @@ get_wfruns_in_stackrun() {
     wfgrp_id=$2
     stack_id=$3
     stackrun_id=$4
-    url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id/$stackrun_id"
+    url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/${stack_id}${stackrun_id}"
     response=$(curl -s --http1.1 -X GET \
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey $api_token" \
@@ -282,7 +282,7 @@ while [ $# -gt 0 ]; do
       readonly workflow_group="$2"
       shift 2
       ;;
-    --resource-name)
+    --stack-name)
       readonly resource_name="$2"
       shift 2
       ;;
