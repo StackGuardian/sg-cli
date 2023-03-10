@@ -15,12 +15,12 @@ fi
 help() {
   cat <<EOF
 
-  ./$(basename "$0") SERVICE --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS
+  ./$(basename "$0") RESOURCE ACTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS
 
-  SERVICES:
+  RESOURCES:
     stack
 
-  OPTIONS:
+  ACTIONS:
     create              create new stack
 
 EOF
