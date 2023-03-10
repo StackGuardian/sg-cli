@@ -4,7 +4,7 @@
 readonly base_url="${SG_BASE_URL:-"https://api.app.stackguardian.io"}"
 readonly api_url="$base_url/api/v1"
 readonly dashboard_url="${SG_DASHBOARD_URL:-"https://app.stackguardian.io/orchestrator"}"
-readonly api_token="$SG_API_TOKEN"
+readonly api_token="sgu_6WcjOIGIUUD5UEHsRYmYo"
 
 if ! type jq >/dev/null 2>&1; then
   echo
@@ -29,10 +29,20 @@ EOF
 stack_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
+  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> 
 
   OPTIONS:
     create              create new stack
+EOF
+}
+
+stack_destroy() {
+  cat <<EOF
+
+  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
+
+  OPTIONS:
+    destroy              delete stack
 
 EOF
 }
@@ -49,6 +59,7 @@ stack_create_help() {
     --dry-run           preview payload before applying (but do not create)
     --stack-name        set stack name, can not be used with --patch-payload
     --patch-payload     patch original json payload
+    --output-json       outputs the response as json
 
 EOF
 }
@@ -73,6 +84,26 @@ create_stack() {
     fi
 }
 
+# Create Delete Stack function 
+delete_stack() {
+    org_id=$1
+    wfgrp_id=$2
+    stk_id=$3
+    url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stk_id"
+    response=$(curl -s --http1.1 -X DELETE \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      --data-raw "${payload}" "$url")
+    if [ $? -eq 0 ] && echo "$response" ; then
+      echo "$response" | jq
+    else
+      echo "== Stack is not deleted =="
+      echo "url: $url"
+      echo "response: $response"
+      exit 1
+    fi
+}
 get_wfruns_in_stackrun() {
     org_id=$1
     wfgrp_id=$2
@@ -84,7 +115,10 @@ get_wfruns_in_stackrun() {
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
       "$url")
-    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+    if [ "$output_json" = "true" ] && [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "$response"
+        exit 1
+    else
         echo "== Retrieving Workflow Run from StackRun failed =="
         echo "url: $url"
         echo "response: $response"
@@ -103,15 +137,18 @@ get_stack() {
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
       "$url")
-    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
-        echo "== Retrieving Stack failed =="
-        echo "url: $url"
-        echo "response: $response"
+    if [ "$output_json" = "true" ] && [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "$response"
         exit 1
+    elif  [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+      echo "== Retrieving Stack failed =="
+      echo "url: $url"
+      echo "response: $response"
+      exit 1
     fi
     echo "$response"
 }
-
+# return JSON for get_stack_status()
 get_stack_status() {
   org_id=$1
   wfgrp_id=$2
@@ -301,6 +338,10 @@ while [ $# -gt 0 ]; do
     --preview)
       readonly preview_patch=true
       shift
+      ;;
+    --output-json)
+      readonly output_json=true
+      shift 
       ;;
     --dry-run)
       readonly dry_run=true
