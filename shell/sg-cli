@@ -22,7 +22,7 @@ help() {
 
   ACTIONS:
     create              create new stack
-
+    destroy              delete stack --stack-id <STACK_ID>
 EOF
 }
 
@@ -33,19 +33,10 @@ stack_help() {
 
   OPTIONS:
     create              create new stack
+    destroy             delete stack --stack-id <STACK_ID>
 EOF
 }
 
-stack_destroy() {
-  cat <<EOF
-
-  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
-
-  OPTIONS:
-    destroy              delete stack
-
-EOF
-}
 
 stack_create_help() {
   cat <<EOF
@@ -115,10 +106,7 @@ get_wfruns_in_stackrun() {
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
       "$url")
-    if [ "$output_json" = "true" ] && [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
-        echo "$response"
-        exit 1
-    else
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
         echo "== Retrieving Workflow Run from StackRun failed =="
         echo "url: $url"
         echo "response: $response"
@@ -137,10 +125,7 @@ get_stack() {
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
       "$url")
-    if [ "$output_json" = "true" ] && [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
-        echo "$response"
-        exit 1
-    elif  [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
       echo "== Retrieving Stack failed =="
       echo "url: $url"
       echo "response: $response"
