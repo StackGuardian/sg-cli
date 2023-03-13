@@ -85,7 +85,7 @@ delete_stack() {
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey $api_token" \
       -H "Content-Type: application/json" \
-      --data-raw "${payload}" "$url")
+      "$url")
     if [ $? -eq 0 ] && echo "$response" ; then
       echo "$response" | jq
     else
