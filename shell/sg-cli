@@ -95,6 +95,126 @@ delete_stack() {
       exit 1
     fi
 }
+
+create_workflow() {
+    org_id=$1
+    wfgrp_id=$2
+    stack_id=$3
+    url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/"
+    response=$(curl -s --http1.1 -X POST \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      --data-raw "${payload}" "$url")
+    if [ $? -eq 0 ] && echo "$response" | grep -q "\"data\""; then
+      echo "$response" | jq
+    else
+      echo "== Workflow creation failed =="
+      echo "url: $url"
+      echo "response: $response"
+      exit 1
+    fi
+}
+
+list_all_workflows() {
+    org_id=$1
+    wfgrp_id=$2
+    stack_id=$3
+    url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/listall/"
+    response=$(curl -s --http1.1 -X GET \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "== Listing all workflows failed =="
+        echo "url: $url"
+        echo "response: $response"
+        exit 1
+    fi
+    echo "$response"
+}
+
+read_workflow() {
+    org_id=$1
+    wfgrp_id=$2
+    stack_id=$3
+    wf_id=$4
+    url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}"
+    response=$(curl -s --http1.1 -X GET \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "== Reading worklfow failed  =="
+        echo "url: $url"
+        echo "response: $response"
+        exit 1
+    fi
+    echo "$response"
+}
+
+delete_workflow() {
+    org_id=$1
+    wfgrp_id=$2
+    stack_id=$3
+    wf_id=$4
+    url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}"
+    response=$(curl -s --http1.1 -X DELETE \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "== Deleting worklfow failed  =="
+        echo "url: $url"
+        echo "response: $response"
+        exit 1
+    fi
+    echo "$response"
+}
+
+listall_artifacts() {
+    org_id=$1
+    wfgrp_id=$2
+    stack_id=$3
+    wf_id=$4
+    url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}/listall_artifacts"
+    response=$(curl -s --http1.1 -X GET \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "== Listing all Artifacts from worklfow failed  =="
+        echo "url: $url"
+        echo "response: $response"
+        exit 1
+    fi
+    echo "$response"
+}
+
+get_workflow_outputs() {
+    org_id=$1
+    wfgrp_id=$2
+    stack_id=$3
+    wf_id=$4
+    url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}/outputs"
+    response=$(curl -s --http1.1 -X GET \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey $api_token" \
+      -H "Content-Type: application/json" \
+      "$url")
+    if [ $? -ne 0 ] || echo "$response" | grep -q "\"error\""; then
+        echo "== Listing outputs from worklfow failed  =="
+        echo "url: $url"
+        echo "response: $response"
+        exit 1
+    fi
+    echo "$response"
+}
+
 get_wfruns_in_stackrun() {
     org_id=$1
     wfgrp_id=$2
