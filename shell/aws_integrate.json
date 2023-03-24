@@ -1,0 +1,28 @@
+{
+   "awsAccounts": [
+        {
+            "ResourceName": "Dummy",
+            "Description": "dummy account losers",
+            "settings": {
+                "kind": "AWS_STATIC",
+                "config": {
+                    "awsAccessKeyId":"hi-its-me-a-dummy-account",
+                    "awsSecretAccessKey":"keep-your-secrets-safe",
+                    "awsDefaultRegion": "us-east-1"
+                }
+            }
+        },
+        {
+            "ResourceName": "Dummy1",
+            "Description": "dummy account losers",
+            "settings": {
+                "kind": "AWS_STATIC",
+                "config": {
+                    "awsAccessKeyId":"hi-its-me-a-dummy-account",
+                    "awsSecretAccessKey":"keep-your-secrets-safe",
+                    "awsDefaultRegion": "us-east-1"
+                }
+            }
+        }
+    ]
+}
