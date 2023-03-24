@@ -507,6 +507,37 @@ create_stack_parse_response() {
   fi
 }
 
+integrate_aws(){
+  if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
+    echo
+    echo "ERROR: parameter --org and payload must be provided"
+    aws_integrate_help
+    exit 1
+  fi
+  array_length="$(echo "${payload}" | jq '.[] | length')"
+  i=0
+  while [ ${i} -lt ${array_length} ]; do
+    object_payload=$(echo "${payload}" | jq ".[][$i]")
+    url="${api_url}/orgs/${org_id}/integrations"
+    response=$(curl -s --http1.1 -X POST \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey ${api_token}" \
+      -H "Content-Type: application/json" \
+      --data-raw "${object_payload}" "${url}")
+    if [ $? -eq 0 ] && echo "${response}" | grep -q "\"data\""; then
+      echo "${response}" | jq
+    else
+      echo "== Integration creation failed =="
+      echo "url: ${url}"
+      echo "response: ${response}"
+      echo "payload: ${object_payload}"
+      exit 1
+    fi
+    i=$(( $i + 1 ))
+  done
+}
+
+
 delete_stack_parse_response() {
   echo "${response}" | jq
   exit 0
@@ -580,36 +611,6 @@ list_all_artifacts_parse_response() {
 integrate_aws_parse_response() {
   echo "${response}" | jq
   exit 0
-}
-
-integrate_aws(){
-  if [ -z "${payload}" ]; then
-    echo
-    echo "ERROR: payload must be provided"
-    aws_integrate_help
-    exit 1
-  fi
-  array_length="$(echo "${payload}" | jq '.[] | length')"
-  i=0
-  while [ ${i} -lt ${array_length} ]; do
-    object_payload=$(echo "${payload}" | jq ".[][$i]")
-    url="${api_url}/orgs/${org_id}/integrations"
-    response=$(curl -s --http1.1 -X POST \
-      -H 'PrincipalId: ""' \
-      -H "Authorization: apikey ${api_token}" \
-      -H "Content-Type: application/json" \
-      --data-raw "${object_payload}" "${url}")
-    if [ $? -eq 0 ] && echo "${response}" | grep -q "\"data\""; then
-      echo "${response}" | jq
-    else
-      echo "== Integration creation failed =="
-      echo "url: ${url}"
-      echo "response: ${response}"
-      echo "payload: ${object_payload}"
-      exit 1
-    fi
-    i=$(( $i + 1 ))
-  done
 }
 
 # main function
@@ -698,6 +699,12 @@ if [ -z "${api_token}" ] || [ "sgu_" != "${api_token:0:4}" ]; then
     exit 1
 fi
 
+if [ $# -eq 0 ]; then
+  help
+  exit 0
+fi
+
+
 case "$1" in
   stack)
     service="$1"
@@ -782,11 +789,6 @@ case "$1" in
     exit 1
     ;;
 esac
-
-# if [ $# -lt 2 ]; then
-#   "${service}"_"${service_option}"_help
-#   exit 1
-# fi
 
 # Parse command-line arguments
 while [ $# -gt 0 ]; do
