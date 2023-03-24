@@ -15,28 +15,59 @@ fi
 help() {
   cat <<EOF
 
-  ./$(basename "$0") RESOURCE ACTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS
+  ./$(basename "$0") RESOURCE OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS
 
   RESOURCES:
     stack
+    workflow
 
-  ACTIONS:
-    create              create new stack
-    destroy              delete stack --stack-id <STACK_ID>
+  OPTIONS:
+    create              create new stack/workflow
+    delete              delete stack/workflow
+    list_all            list all workflows
+    read                read workflow
+EOF
+}
+
+workflow_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
+
+  OPTIONS:
+    create              create new workflow
+    list_all            list all workflows
+    read                read workflow
+    delete              delete workflow
 EOF
 }
 
 stack_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> 
+  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
 
   OPTIONS:
     create              create new stack
-    destroy             delete stack --stack-id <STACK_ID>
+    delete              delete stack --stack-id <STACK_ID>
 EOF
 }
 
+stack_delete_help() {
+  cat <<EOF
+
+  ./$(basename "$0") stack delete --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
+
+  OPTIONS:
+    --wait              wait for stack creation, applicable only when --run is set
+    --preview           preview payload before applying
+    --dry-run           preview payload before applying (but do not create)
+    --stack-id          set stack name(id), can not be used with --patch-payload
+    --patch-payload     patch original json payload
+    --output-json       outputs the response as json
+
+EOF
+}
 
 stack_create_help() {
   cat <<EOF
@@ -48,7 +79,74 @@ stack_create_help() {
     --run               run stack after creation
     --preview           preview payload before applying
     --dry-run           preview payload before applying (but do not create)
-    --stack-name        set stack name, can not be used with --patch-payload
+    --stack-id        set stack name, can not be used with --patch-payload
+    --patch-payload     patch original json payload
+    --output-json       outputs the response as json
+
+EOF
+}
+
+workflow_delete_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow delete --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
+
+  OPTIONS:
+    --wait              wait for workflow creation, applicable only when --run is set
+    --preview           preview payload before applying
+    --dry-run           preview payload before applying (but do not create)
+    --workflow-id       set workflow name(id), can not be used with --patch-payload
+    --patch-payload     patch original json payload
+    --output-json       outputs the response as json
+
+EOF
+}
+
+workflow_create_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow create --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
+
+  OPTIONS:
+    --wait              wait for workflow creation, applicable only when --run is set
+    --run               run workflow after creation
+    --preview           preview payload before applying
+    --dry-run           preview payload before applying (but do not create)
+    --workflow-id       set workflow name, can not be used with --patch-payload
+    --patch-payload     patch original json payload
+    --output-json       outputs the response as json
+
+EOF
+}
+
+workflow_read_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow read --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
+
+  OPTIONS:
+    --wait              wait for workflow creation, applicable only when --run is set
+    --run               run workflow after creation
+    --preview           preview payload before applying
+    --dry-run           preview payload before applying (but do not create)
+    --workflow-id       set workflow name, can not be used with --patch-payload
+    --patch-payload     patch original json payload
+    --output-json       outputs the response as json
+
+EOF
+}
+
+workflow_list_all_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow read --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
+
+  OPTIONS:
+    --wait              wait for workflow creation, applicable only when --run is set
+    --run               run workflow after creation
+    --preview           preview payload before applying
+    --dry-run           preview payload before applying (but do not create)
+    --workflow-id       set workflow name, can not be used with --patch-payload
     --patch-payload     patch original json payload
     --output-json       outputs the response as json
 
@@ -75,12 +173,12 @@ create_stack() {
     fi
 }
 
-# Create Delete Stack function 
+# Create Delete Stack function
 delete_stack() {
     org_id=$1
     wfgrp_id=$2
-    stk_id=$3
-    url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stk_id"
+    stack_id=$3
+    url="$api_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
     response=$(curl -s --http1.1 -X DELETE \
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey $api_token" \
@@ -139,7 +237,7 @@ read_workflow() {
     org_id=$1
     wfgrp_id=$2
     stack_id=$3
-    wf_id=$4
+    # wf_id=$4
     url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}"
     response=$(curl -s --http1.1 -X GET \
       -H 'PrincipalId: ""' \
@@ -159,7 +257,7 @@ delete_workflow() {
     org_id=$1
     wfgrp_id=$2
     stack_id=$3
-    wf_id=$4
+    # wf_id=$4
     url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}"
     response=$(curl -s --http1.1 -X DELETE \
       -H 'PrincipalId: ""' \
@@ -179,7 +277,7 @@ listall_artifacts() {
     org_id=$1
     wfgrp_id=$2
     stack_id=$3
-    wf_id=$4
+    # wf_id=$4
     url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}/listall_artifacts"
     response=$(curl -s --http1.1 -X GET \
       -H 'PrincipalId: ""' \
@@ -199,7 +297,7 @@ get_workflow_outputs() {
     org_id=$1
     wfgrp_id=$2
     stack_id=$3
-    wf_id=$4
+    # wf_id=$4
     url="$api_url/orgs/{org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/{wf_id}/outputs"
     response=$(curl -s --http1.1 -X GET \
       -H 'PrincipalId: ""' \
@@ -280,13 +378,12 @@ get_stackrun_status() {
 }
 
 # main function
-stack_create_main() {
-    # create a stack
+main() {
     org_id=$org
     wfgrp_id="$workflow_group"
 
-    if [ -n "$resource_name" ] && [ -z "$json_patch" ]; then
-      payload=$(echo "${payload}" | jq ".ResourceName = \"$resource_name\"")
+    if [ -n "$stack_id" ] && [ -z "$json_patch" ]; then
+      payload=$(echo "${payload}" | jq ".ResourceName = \"$stack_id\"")
     elif [ -n "$json_patch" ]; then
       patch_payload "$(get_root_patch_keys)"
     fi
@@ -297,15 +394,18 @@ stack_create_main() {
       echo "${payload}" | jq
     fi
 
-    response=$(create_stack "$org_id" "$wfgrp_id")
+    response=$("${service}"_"${service_option}"_main "$org_id" "$wfgrp_id")
+
     if [ $? -ne 0 ]; then
       echo "$response"
       exit 1
+    elif [ "${output_json}" ]; then
+      echo "$response"
     fi
+
     if [ "$response" != "" ]; then
-        stack_id=$(echo "$response" | jq -r '.data.stack.ResourceName')
+        stack_id=${stack_id:-$(echo "$response" | jq -r '.data.stack.ResourceName')}
         stack_run_id=$(echo "$response" | jq -r '.data.stack.StackRunId')
-        echo "Stack created"
         echo "$dashboard_url/orgs/$org_id/wfgrps/$wfgrp_id/stacks/$stack_id"
     else
         exit 1
@@ -391,13 +491,26 @@ case "$1" in
   stack)
     service="$1"
     case "$2" in
-      create)
+      create|delete)
         service_option="$2"
         shift 2
         ;;
       *)
         echo "ERROR: unknown option $2" >&2
         stack_help
+        exit 1
+    esac
+    ;;
+  workflow)
+    service="$1"
+    case "$2" in
+      create|delete|read|list_all)
+        service_option="$2"
+        shift 2
+        ;;
+      *)
+        echo "ERROR: unknown option $2" >&2
+        workflow_help
         exit 1
     esac
     ;;
@@ -424,8 +537,12 @@ while [ $# -gt 0 ]; do
       readonly workflow_group="$2"
       shift 2
       ;;
-    --stack-name)
-      readonly resource_name="$2"
+    --stack-id)
+      readonly stack_id="$2"
+      shift 2
+      ;;
+    --workflow-id)
+      readonly wf_id="$2"
       shift 2
       ;;
     --wait)
@@ -446,7 +563,7 @@ while [ $# -gt 0 ]; do
       ;;
     --output-json)
       readonly output_json=true
-      shift 
+      shift
       ;;
     --dry-run)
       readonly dry_run=true
@@ -470,4 +587,4 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-"${service}"_"${service_option}"_main
+main "$@"
