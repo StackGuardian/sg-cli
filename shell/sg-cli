@@ -605,6 +605,7 @@ integrate_aws(){
       echo "== Integration creation failed =="
       echo "url: $url"
       echo "response: $response"
+      echo "payload: ${object_payload}"
       exit 1
     fi
     i=$(( $i + 1 ))
