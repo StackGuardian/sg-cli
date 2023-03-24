@@ -1,0 +1,86 @@
+{
+    "ResourceName": "azure_aks-Wngq",
+    "Description": "",
+    "Tags": [
+      "test","sg-cli"
+    ],
+    "IsActive": "string",
+    "WfType": "TERRAFORM",
+    "WfStepsConfig": [
+      {}
+    ],
+    "TerraformConfig": {
+        "terraformVersion": "1.3.6",
+        "managedTerraformState": true,
+        "approvalPreApply": false,
+        "driftCheck": false
+      },
+    "DeploymentPlatformConfig": [
+      {
+        "config": {
+          "integrationId": "/integrations/test-azure"
+        },
+        "kind": "AZURE_STATIC"
+      }
+    ],
+    "VCSConfig": {
+        "iacVCSConfig": {
+            "useMarketplaceTemplate": true,
+            "iacTemplate": "/demo-org/azure_aks",
+            "iacTemplateId": "/demo-org/azure_aks:1"
+          },
+          "iacInputData": {
+            "schemaType": "FORM_JSONSCHEMA",
+            "data": {
+              "agents_labels": {},
+              "admin_username": "azureuser",
+              "prefix": "seelg",
+              "enable_log_analytics_workspace": false,
+              "resource_group_name": "test",
+              "enable_azure_policy": false,
+              "os_disk_size_gb": 50,
+              "net_profile_outbound_type": "loadBalancer",
+              "rbac_aad_managed": false,
+              "network_plugin": "kubenet",
+              "log_analytics_workspace_sku": "PerGB2018",
+              "enable_role_based_access_control": false,
+              "enable_node_public_ip": false,
+              "agents_tags": {},
+              "identity_type": "SystemAssigned",
+              "cluster_name": "sg-wfs-eedemo-cluster",
+              "vnet_subnet_id": "${workflow::azure-stacfk-wfs-demo.test-ddd-2.azure-vnet-3vXY.outputs.vnet_subnets.value.1}",
+              "log_retention_in_days": 30,
+              "agents_size": "Standard_D2s_v3",
+              "enable_host_encryption": false,
+              "enable_http_application_routing": false,
+              "agents_pool_name": "nodepool",
+              "tags": {},
+              "private_cluster_enabled": false,
+              "agents_count": 2,
+              "enable_kube_dashboard": false,
+              "enable_auto_scaling": false,
+              "sku_tier": "Free",
+              "agents_type": "VirtualMachineScaleSets"
+            }
+    },
+    "UserSchedules": [
+      {}
+    ],
+    "MiniSteps": {
+        "wfChaining": {
+        "ERRORED": [],
+        "COMPLETED": []
+      },
+      "notifications": {
+        "email": {
+          "ERRORED": [],
+          "COMPLETED": [],
+          "APPROVAL_REQUIRED": [],
+          "CANCELLED": []
+        }
+      }
+    },
+    "Approvers": {},
+    "EnvironmentVariables": []
+    }
+}
