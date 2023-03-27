@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Define variables
+[ -f .env ] && . .env
 readonly base_url="${SG_BASE_URL:-"https://api.app.stackguardian.io"}"
 readonly api_url="${base_url}/api/v1"
 readonly dashboard_url="${SG_DASHBOARD_URL:-"https://app.stackguardian.io/orchestrator"}"
@@ -40,7 +41,7 @@ EOF
 aws_integrate_help() {
   cat <<EOF
 
-  ./$(basename "$0") aws integrate --org <ORG_NAME>
+  ./$(basename "$0") aws integrate --org <ORG_NAME> -- <JSON_PAYLOAD_PATH>
 
 EOF
 }
@@ -508,6 +509,7 @@ create_stack_parse_response() {
 }
 
 integrate_aws(){
+  return_response=
   if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
     echo
     echo "ERROR: parameter --org and payload must be provided"
@@ -516,7 +518,7 @@ integrate_aws(){
   fi
   array_length="$(echo "${payload}" | jq '.[] | length')"
   i=0
-  while [ ${i} -lt ${array_length} ]; do
+  while [ ${i} -lt "${array_length}" ]; do
     object_payload=$(echo "${payload}" | jq ".[][$i]")
     url="${api_url}/orgs/${org_id}/integrations"
     response=$(curl -s --http1.1 -X POST \
@@ -525,7 +527,7 @@ integrate_aws(){
       -H "Content-Type: application/json" \
       --data-raw "${object_payload}" "${url}")
     if [ $? -eq 0 ] && echo "${response}" | grep -q "\"data\""; then
-      echo "${response}" | jq
+      return_response="${return_response}\n${response}"
     else
       echo "== Integration creation failed =="
       echo "url: ${url}"
@@ -535,6 +537,7 @@ integrate_aws(){
     fi
     i=$(( $i + 1 ))
   done
+  echo "${return_response}" | jq
 }
 
 
