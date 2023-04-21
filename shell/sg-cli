@@ -587,6 +587,49 @@ create_workflow() {
     --data-raw "${payload}" "${url}")
   parse_response "Workflow creation failed"
 }
+bulk_create_workflow() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group are required"
+    workflow_create_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
+  # write a for loop to iterate over the list of workflows in payload
+  for workflow in "${payload[@]}"; do
+    # Perform desired actions on each workflow
+    echo "Processing workflow: $workflow"
+    # Add your code here to perform operations on each workflow
+    response=$(curl -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${workflow}" "${url}")
+    if [ $? -eq 0 ] && echo "${response}" | grep -q -E "Workflow.*created"; then
+      if [ -z "${workflow[TfState]}" ]; then
+        echo "TfState is not provided for workflow: ${workflow[Name]}"
+        echo "Skipping the workflow"
+      else
+        echo "TfState is provided for workflow: ${workflow[Name]}"
+        echo "Updating the workflow"
+        url_for_getting_signed_url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${workflow[Name]}/tfstate_upload_url"
+        generate_signed_url=$(curl -s --http1.1 -X GET \
+                    -H 'PrincipalId: ""' \
+                    -H "Authorization: apikey ${api_token}" \
+                    -H "Content-Type: application/json" \
+                    "${url_for_getting_signed_url}")
+        signed_url=$generate_signed_url[msg]
+        echo "signed_url: $signed_url"
+        curl --upload-file "${workflow[TfState]}" "${signed_url}" -H "Content-Type: application/json"
+      fi
+      echo "${response}" | jq
+    else
+      echo "== Workflow creation failed =="
+      echo "url: ${url}"
+      echo "response: ${response}"
+    fi
+  done
+}
 
 #######################################
 # List all workflows
