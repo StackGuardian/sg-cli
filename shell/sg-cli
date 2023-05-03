@@ -2,7 +2,7 @@
 
 # Define variables
 [ -f .env ] && . .env
-readonly base_url="${SG_BASE_URL:-"https://api.app.stackguardian.io"}"
+readonly base_url="${SG_BASE_URL:-"https://app.api.stackguardian.io/"}"
 readonly api_url="${base_url}/api/v1"
 readonly dashboard_url="${SG_DASHBOARD_URL:-"https://app.stackguardian.io/orchestrator"}"
 readonly api_token="${SG_API_TOKEN}"
@@ -112,6 +112,13 @@ stack_create_help() {
     --stack-id        set stack name, can not be used with --patch-payload
     --patch-payload     patch original json payload
     --output-json       outputs the response as json
+
+EOF
+}
+stack_run_help() {
+  cat <<EOF
+
+  ./$(basename "$0") stack run --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID> OPTIONS -- <JSON_PAYLOAD_PATH>
 
 EOF
 }
@@ -253,6 +260,27 @@ get_wfruns_in_stackrun() {
   echo "${response}"
 }
 
+run_stack() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" || [ -z "${stack_id}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
+    stack_run_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}\stacksruns"
+  response=$(curl -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
+    echo "== Executing Stack failed =="
+    echo "url: ${url}"
+    echo "response: ${response}"
+    exit 1
+  fi
+  echo "${response}"
+}
 # create_workflow_in_stack() {
 #     url="${api_url}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/"
 #     response=$(curl -s --http1.1 -X POST \
@@ -395,6 +423,28 @@ list_all_workflow() {
   echo "${response}"
 }
 
+run_workflow() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}"]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group are required"
+    workflow_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfruns"
+  response=$(curl -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
+    echo "== Executing workflow failed =="
+    echo "url: ${url}"
+    echo "response: ${response}"
+    exit 1
+  fi
+  echo "${response}"
+}
+
 read_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
@@ -439,6 +489,7 @@ delete_workflow() {
     exit 1
   fi
 }
+
 
 list_all_artifacts() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
