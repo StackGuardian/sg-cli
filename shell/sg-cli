@@ -116,10 +116,18 @@ stack_create_help() {
 
 EOF
 }
-stack_run_help() {
+stack_apply_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack run --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID> OPTIONS -- <JSON_PAYLOAD_PATH>
+  ./$(basename "$0") stack apply --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID> OPTIONS 
+
+EOF
+}
+
+stack_destroy_help() {
+  cat <<EOF
+
+  ./$(basename "$0") stack destroy --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID> OPTIONS 
 
 EOF
 }
@@ -261,21 +269,43 @@ get_wfruns_in_stackrun() {
   echo "${response}"
 }
 
-run_stack() {
+apply_stack() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
-    stack_run_help
+    stack_apply_help
     exit 1
   fi
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}\stackruns"
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns"
   response=$(curl -s --http1.1 -X POST \
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
-    --data-raw "${payload}" "${url}")
+    --data-raw "{"ActionType": "apply"}" "${url}")
   if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
     echo "== Executing Stack failed =="
+    echo "url: ${url}"
+    echo "response: ${response}"
+    exit 1
+  fi
+  echo "${response}"
+}
+
+destroy_stack() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
+    stack_destroy_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns"
+  response=$(curl -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "{"ActionType": "destroy"}" "${url}")
+  if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
+    echo "== Destroying Stack failed =="
     echo "url: ${url}"
     echo "response: ${response}"
     exit 1
@@ -424,7 +454,7 @@ list_all_workflow() {
   echo "${response}"
 }
 
-run_workflow() {
+apply_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}"]; then
     echo
     echo "ERROR: parameters --org, --workflow-group are required"
@@ -436,9 +466,31 @@ run_workflow() {
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
-    --data-raw "${payload}" "${url}")
+    --data-raw "{"ActionType": "apply"}" "${url}")
   if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
     echo "== Executing workflow failed =="
+    echo "url: ${url}"
+    echo "response: ${response}"
+    exit 1
+  fi
+  echo "${response}"
+}
+
+destroy_workflow() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}"]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group are required"
+    workflow_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfruns"
+  response=$(curl -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "{"ActionType": "destroy"}" "${url}")
+  if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
+    echo "== Destroying workflow failed =="
     echo "url: ${url}"
     echo "response: ${response}"
     exit 1
@@ -560,7 +612,37 @@ create_stack_parse_response() {
   fi
 }
 
-run_stack_parse_response() {
+apply_stack_parse_response() {
+  if [ "${response}" != "" ]; then
+    stack_id=${stack_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
+    stack_run_id=$(echo "${response}" | jq -r '.data.StackRunId')
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
+  else
+    exit 1
+  fi
+
+  # check stackrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Stack run executed"
+    while [ "$(get_stackrun_status)" != "ERRORED" ] \
+      && [ "$(get_stackrun_status)" != "COMPLETED" ] \
+      && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Stack under deployment..."
+      sleep 5
+    done
+  fi
+
+  # print final stack status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Stack finished with $(get_stack_status) status"
+    exit 0
+  else
+    echo "Stack executed."
+    exit 0
+  fi
+}
+
+destroy_stack_parse_response() {
   if [ "${response}" != "" ]; then
     stack_id=${stack_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
     stack_run_id=$(echo "${response}" | jq -r '.data.StackRunId')
@@ -794,7 +876,7 @@ case "$1" in
   stack)
     service="$1"
     case "$2" in
-      create|run|delete)
+      create|apply|destroy|delete)
         service_option="$2"
         shift 2
         ;;
@@ -812,7 +894,7 @@ case "$1" in
   workflow)
     service="$1"
     case "$2" in
-      create|delete|read|list_all)
+      create|delete|read|list_all|apply|destroy)
         service_option="$2"
         shift 2
         ;;
