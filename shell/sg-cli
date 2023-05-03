@@ -86,6 +86,7 @@ stack_help() {
 
   OPTIONS:
     create              create new stack
+    run                 run an existing stack
     delete              delete stack
 
 EOF
@@ -261,13 +262,13 @@ get_wfruns_in_stackrun() {
 }
 
 run_stack() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" || [ -z "${stack_id}" ]; then
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
     stack_run_help
     exit 1
   fi
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}\stacksruns"
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}\stackruns"
   response=$(curl -s --http1.1 -X POST \
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
@@ -559,6 +560,36 @@ create_stack_parse_response() {
   fi
 }
 
+run_stack_parse_response() {
+  if [ "${response}" != "" ]; then
+    stack_id=${stack_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
+    stack_run_id=$(echo "${response}" | jq -r '.data.StackRunId')
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
+  else
+    exit 1
+  fi
+
+  # check stackrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Stack run executed"
+    while [ "$(get_stackrun_status)" != "ERRORED" ] \
+      && [ "$(get_stackrun_status)" != "COMPLETED" ] \
+      && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Stack under deployment..."
+      sleep 5
+    done
+  fi
+
+  # print final stack status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Stack finished with $(get_stack_status) status"
+    exit 0
+  else
+    echo "Stack executed."
+    exit 0
+  fi
+}
+
 integrate_aws(){
   return_response=
   if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
@@ -763,7 +794,7 @@ case "$1" in
   stack)
     service="$1"
     case "$2" in
-      create|delete)
+      create|run|delete)
         service_option="$2"
         shift 2
         ;;
