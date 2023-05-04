@@ -679,6 +679,36 @@ create_stack_parse_response() {
   fi
 }
 
+run_workflow_parse_response() {
+  if [ "${response}" != "" ]; then
+    # wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
+    wf_run_id=$(echo "${response}" | jq -r '.data.ResourceName')
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
+  else
+    exit 1
+  fi
+
+  # check stackrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow run executed"
+    while [ "$(get_workflow_status)" != "ERRORED" ] \
+      && [ "$(get_workflow_status)" != "COMPLETED" ] \
+      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Workflow under deployment..."
+      sleep 5
+    done
+  fi
+
+  # print final stack status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow finished with $(get_workflow_status) status"
+    exit 0
+  else
+    echo "Workflow executed."
+    exit 0
+  fi
+}
+
 apply_workflow_parse_response() {
   if [ "${response}" != "" ]; then
     # wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
@@ -991,7 +1021,7 @@ case "$1" in
   workflow)
     service="$1"
     case "$2" in
-      create|delete|read|list_all|apply|destroy)
+      create|delete|read|list_all|apply|destroy|run)
         service_option="$2"
         shift 2
         ;;
