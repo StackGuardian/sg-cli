@@ -75,6 +75,8 @@ workflow_help() {
     list_all            list all workflows
     read                read workflow
     delete              delete workflow
+    apply               execute workflow
+    destroy             run workflow destroy
 
 EOF
 }
@@ -86,8 +88,9 @@ stack_help() {
 
   OPTIONS:
     create              create new stack
-    run                 run an existing stack
     delete              delete stack
+    apply               execute stack
+    destroy             run stack destroy
 
 EOF
 }
@@ -116,10 +119,11 @@ stack_create_help() {
 
 EOF
 }
+
 stack_apply_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack apply --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID> OPTIONS 
+  ./$(basename "$0") stack apply --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
 
 EOF
 }
@@ -127,7 +131,7 @@ EOF
 stack_destroy_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack destroy --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID> OPTIONS 
+  ./$(basename "$0") stack destroy --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
 
 EOF
 }
@@ -151,6 +155,22 @@ workflow_create_help() {
     --workflow-id       set workflow name, can not be used with --patch-payload
     --patch-payload     patch original json payload
     --output-json       outputs the response as json
+
+EOF
+}
+
+workflow_apply_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow apply --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <STACK_ID>
+
+EOF
+}
+
+workflow_destroy_help() {
+  cat <<EOF
+
+  ./$(basename "$0") workflow destroy --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <STACK_ID>
 
 EOF
 }
@@ -234,7 +254,7 @@ get_stack() {
   fi
   echo "${response}"
 }
-# return JSON for get_stack_status()
+
 get_stack_status() {
   response=$(get_stack)
   if echo "${response}" | grep -q '"msg":' && echo "${response}" | grep -q '"LatestWfStatus":'; then
@@ -269,6 +289,31 @@ get_wfruns_in_stackrun() {
   echo "${response}"
 }
 
+get_workflow() {
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
+  response=$(curl -s --http1.1 -X GET \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    "${url}")
+  if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
+    echo "== Retrieving Workflow failed =="
+    echo "url: ${url}"
+    echo "response: ${response}"
+    exit 1
+  fi
+  echo "${response}"
+}
+
+get_workflow_status() {
+  response=$(get_workflow)
+  if echo "${response}" | grep -q '"msg":' && echo "${response}" | grep -q '"LatestStatus":'; then
+    echo "${response}" | jq -r '.msg.LatestStatus'
+  else
+    echo false
+  fi
+}
+
 apply_stack() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
     echo
@@ -276,12 +321,12 @@ apply_stack() {
     stack_apply_help
     exit 1
   fi
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns"
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns/"
   response=$(curl -s --http1.1 -X POST \
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
-    --data-raw "{"ActionType": "apply"}" "${url}")
+    -d '{"ActionType": "apply"}' "${url}")
   if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
     echo "== Executing Stack failed =="
     echo "url: ${url}"
@@ -303,7 +348,7 @@ destroy_stack() {
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
-    --data-raw "{"ActionType": "destroy"}" "${url}")
+    --data-raw '{"ActionType": "destroy"}' "${url}")
   if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
     echo "== Destroying Stack failed =="
     echo "url: ${url}"
@@ -312,6 +357,7 @@ destroy_stack() {
   fi
   echo "${response}"
 }
+
 # create_workflow_in_stack() {
 #     url="${api_url}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/"
 #     response=$(curl -s --http1.1 -X POST \
@@ -454,10 +500,10 @@ list_all_workflow() {
   echo "${response}"
 }
 
-apply_workflow() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}"]; then
+run_workflow() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
-    echo "ERROR: parameters --org, --workflow-group are required"
+    echo "ERROR: parameters --org, --workflow-group, --workflow-id are required"
     workflow_help
     exit 1
   fi
@@ -465,8 +511,29 @@ apply_workflow() {
   response=$(curl -s --http1.1 -X POST \
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" "${url}")
+  if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
+    echo "== Executing workflow failed =="
+    echo "url: ${url}"
+    echo "response: ${response}"
+    exit 1
+  fi
+  echo "${response}"
+}
+
+apply_workflow() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group, --workflow-id are required"
+    workflow_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
+  response=$(curl -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
-    --data-raw "{"ActionType": "apply"}" "${url}")
+    -d '{"ActionType": "apply"}' "${url}")
   if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
     echo "== Executing workflow failed =="
     echo "url: ${url}"
@@ -477,18 +544,18 @@ apply_workflow() {
 }
 
 destroy_workflow() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}"]; then
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group are required"
     workflow_help
     exit 1
   fi
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfruns"
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
   response=$(curl -s --http1.1 -X POST \
     -H 'PrincipalId: ""' \
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
-    --data-raw "{"ActionType": "destroy"}" "${url}")
+    --data-raw '{"ActionType": "destroy"}' "${url}")
   if [ $? -ne 0 ] || echo "${response}" | grep -q "\"error\""; then
     echo "== Destroying workflow failed =="
     echo "url: ${url}"
@@ -608,6 +675,36 @@ create_stack_parse_response() {
     exit 0
   else
     echo "Stack created. To run it go to the Dashboard!"
+    exit 0
+  fi
+}
+
+apply_workflow_parse_response() {
+  if [ "${response}" != "" ]; then
+    wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
+    wf_run_id="${wf_id}"
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
+  else
+    exit 1
+  fi
+
+  # check stackrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow run executed"
+    while [ "$(get_workflow_status)" != "ERRORED" ] \
+      && [ "$(get_workflow_status)" != "COMPLETED" ] \
+      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Workflow under deployment..."
+      sleep 5
+    done
+  fi
+
+  # print final stack status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow finished with $(get_workflow_status) status"
+    exit 0
+  else
+    echo "Workflow executed."
     exit 0
   fi
 }
