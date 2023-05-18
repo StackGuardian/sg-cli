@@ -204,7 +204,7 @@ parse_response() {
     [ -n "$status_code" ] && echo "Status code: ${status_code}"
     echo "Response: ${response}"
 
-    echo "$full_response"
+    # echo "$full_response"
     exit 1
   else
     echo "${response}" | jq
@@ -584,7 +584,7 @@ create_stack_parse_response() {
     while [ "$(get_stackrun_status)" != "ERRORED" ] \
       && [ "$(get_stackrun_status)" != "COMPLETED" ] \
       && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment..."
+      echo "Stack under deployment... $(get_stackrun_status)"
       sleep 5
     done
   fi
@@ -614,7 +614,7 @@ run_workflow_parse_response() {
     while [ "$(get_workflow_status)" != "ERRORED" ] \
       && [ "$(get_workflow_status)" != "COMPLETED" ] \
       && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Workflow under deployment..."
+      echo "Workflow under deployment... $(get_stackrun_status)"
       sleep 5
     done
   fi
@@ -644,7 +644,7 @@ apply_workflow_parse_response() {
     while [ "$(get_workflow_status)" != "ERRORED" ] \
       && [ "$(get_workflow_status)" != "COMPLETED" ] \
       && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Workflow under deployment..."
+      echo "Workflow under deployment... $(get_stackrun_status)"
       sleep 5
     done
   fi
@@ -673,7 +673,7 @@ apply_stack_parse_response() {
     while [ "$(get_stackrun_status)" != "ERRORED" ] \
       && [ "$(get_stackrun_status)" != "COMPLETED" ] \
       && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment..."
+      echo "Stack under deployment... $(get_stackrun_status) $(get_stackrun_status)"
       sleep 5
     done
   fi
@@ -703,7 +703,7 @@ destroy_stack_parse_response() {
     while [ "$(get_stackrun_status)" != "ERRORED" ] \
       && [ "$(get_stackrun_status)" != "COMPLETED" ] \
       && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment..."
+      echo "Stack under deployment... $(get_stackrun_status)"
       sleep 5
     done
   fi
@@ -768,7 +768,7 @@ create_workflow_parse_response() {
   #   while [ "$(get_workflow_outputs)" != "ERRORED" ] \
   #       && [ "$(get_workflow_outputs)" != "COMPLETED" ] \
   #       && [ "$(get_workflow_outputs)" != "APPROVAL_REQUIRED" ]; do
-  #       echo "Workflow under deployment..."
+  #       echo "Workflow under deployment... $(get_stackrun_status)"
   #       sleep 5
   #   done
   # fi
