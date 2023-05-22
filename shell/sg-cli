@@ -242,7 +242,7 @@ parse_response() {
     echo "== $1 =="
     echo "URL: ${url}"
     [ -n "$status_code" ] && echo "Status code: ${status_code}"
-    echo "Response: ${response})"
+    echo "Response: ${response}"
 
     # echo "$full_response"
     exit 1
@@ -1423,5 +1423,13 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+cleanup() {
+  printf "\nGracefull shutdown.."
+  [ -n "${spinner_pid}" ] && kill "${spinner_pid}" >/dev/null 2>&1
+  exit 0
+}
+
+trap cleanup INT
 
 main "$@"
