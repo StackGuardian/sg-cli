@@ -313,40 +313,6 @@ parse_response() {
   fi
 }
 
-create_stack() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
-    echo
-    echo "ERROR: parameters --org, --workflow-group and payload are required"
-    stack_create_help
-    exit 1
-  fi
-  runOnCreate=${run_on_create:-false}
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/?runOnCreate=$runOnCreate"
-  response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
-    -H "Authorization: apikey ${api_token}" \
-    -H "Content-Type: application/json" \
-    --data-raw "${payload}" "${url}")
-  parse_response "Stack creation failed"
-}
-
-# Create Delete Stack function
-delete_stack() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
-    echo
-    echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
-    stack_delete_help
-    exit 1
-  fi
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
-  response=$(curl -i -s --http1.1 -X DELETE \
-    -H 'PrincipalId: ""' \
-    -H "Authorization: apikey ${api_token}" \
-    -H "Content-Type: application/json" \
-    "${url}")
-  parse_response "Stack is not deleted"
-}
-
 get_stack() {
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
   response=$(curl -i -s --http1.1 -X GET \
@@ -354,7 +320,7 @@ get_stack() {
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
     "${url}")
-  parse_response "Retrieving Stack failed"
+  parse_response "Retrieving stack failed"
 }
 
 get_stack_status() {
@@ -382,7 +348,7 @@ get_wfruns_in_stackrun() {
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
     "${url}")
-  parse_response "Retrieving Workflow Run from StackRun failed"
+  parse_response "Retrieving workflow run from stack run failed"
 }
 
 get_workflow() {
@@ -392,7 +358,7 @@ get_workflow() {
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
     "${url}")
-  parse_response "Retrieving Workflow failed"
+  parse_response "Retrieving workflow failed"
 }
 
 get_workflow_status() {
@@ -1133,10 +1099,10 @@ destroy_stack_parse_response() {
 
   # print final stack status
   if [ "${wait_execution}" = "true" ]; then
-    echo "Stack finished with $(get_stack_status) status"
+    echo "Stack finished with $(get_stackrun_status) status"
     exit 0
   else
-    echo "Stack executed."
+    echo "Stack destroy executed."
     exit 0
   fi
 }
