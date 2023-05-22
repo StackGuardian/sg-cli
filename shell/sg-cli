@@ -62,12 +62,8 @@ Examples:
   # Execute "Apply" on existing stack
   ./$(basename "$0") stack apply --org demo-org --workflow-group demo-wfgrp --stack-id demo-stack
 
-  # Delete stack
-  ./$(basename "$0") stack delete --org demo-org --workflow-group demo-wfgrp --stack-id demo-stack
-
 Sub-commands:
   create      Create new workflow
-  delete      Delete the workflow from workflow group
   apply       Execute "Apply" on existing workflow
   destroy     Execute "Destroy" on existing workflow
 
@@ -1265,7 +1261,7 @@ case "$1" in
   stack)
     service="$1"
     case "$2" in
-      create|delete|apply|destroy)
+      create|apply|destroy)
         service_option="$2"
         shift 2
         ;;
