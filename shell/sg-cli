@@ -221,13 +221,13 @@ EOF
 parse_response() {
   # full_response="$response"
   status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
-  response="$(echo "$response" | grep -E '^{.*')"
+  response="$(echo "$response" | sed -n '/^{.*/,$p' | tr '\n' ' ')"
 
   if [ "$status_code" != "200" ] && [ "$status_code" != "201" ]; then
     echo "== $1 =="
     echo "URL: ${url}"
     [ -n "$status_code" ] && echo "Status code: ${status_code}"
-    echo "Response: ${response}"
+    echo "Response: ${response})"
 
     # echo "$full_response"
     exit 1
