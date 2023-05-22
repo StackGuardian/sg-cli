@@ -63,9 +63,10 @@ Examples:
   ./$(basename "$0") stack apply --org demo-org --workflow-group demo-wfgrp --stack-id demo-stack
 
 Sub-commands:
-  create      Create new workflow
-  apply       Execute "Apply" on existing workflow
-  destroy     Execute "Destroy" on existing workflow
+  create      Create new stack
+  apply       Execute "Apply" on existing stack
+  destroy     Execute "Destroy" on existing stack
+  outputs     Get outputs from stack
 
 Options:
   --org '': (required)
@@ -529,6 +530,35 @@ destroy_stack() {
 #     fi
 #     echo "${response}"
 # }
+
+#######################################
+# Get otputs of stack
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
+outputs_stack() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
+    stack_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/outputs/"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    "${url}")
+  parse_response "Faild to get outputs"
+}
 
 #######################################
 # Create new workflow
@@ -1261,7 +1291,7 @@ case "$1" in
   stack)
     service="$1"
     case "$2" in
-      create|apply|destroy)
+      create|apply|destroy|outputs)
         service_option="$2"
         shift 2
         ;;
@@ -1271,7 +1301,7 @@ case "$1" in
         ;;
       *)
         echo
-        echo "ERROR: unknown option $2" >&2
+        echo "ERROR: unknown option '$2'" >&2
         stack_help
         exit 1
     esac
@@ -1289,7 +1319,7 @@ case "$1" in
         ;;
       *)
         echo
-        echo "ERROR: unknown option $2" >&2
+        echo "ERROR: unknown option '$2'" >&2
         workflow_help
         exit 1
     esac
@@ -1307,7 +1337,7 @@ case "$1" in
         ;;
       *)
         echo
-        echo "ERROR: unknown option $2" >&2
+        echo "ERROR: unknown option '$2'" >&2
         artifacts_help
         exit 1
     esac
@@ -1325,7 +1355,7 @@ case "$1" in
         ;;
       *)
         echo
-        echo "ERROR: unknown option $2" >&2
+        echo "ERROR: unknown option '$2'" >&2
         aws_help
         exit 1
     esac
@@ -1413,7 +1443,7 @@ while [ $# -gt 0 ]; do
       ;;
     *)
       echo
-      echo "ERROR: unknown option $1" >&2
+      echo "ERROR: unknown option '$1'" >&2
       "${service}"_help
       exit 1
       ;;
