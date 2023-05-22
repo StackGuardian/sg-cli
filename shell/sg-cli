@@ -214,6 +214,21 @@ Use "./$(basename "$0") options" for a list of global command-line options (appi
 EOF
 }
 
+spinner() {
+    spinner_pid=$1
+    # delay=0.15
+    spinstr='|/-\'
+    while ps a | awk '{print $1}' | grep "${spinner_pid}" >/dev/null 2>&1; do
+        temp=${spinstr#?}
+        printf " [%c] " "$spinstr"
+        spinstr=$temp${spinstr%"$temp"}
+        # sleep $delay
+        printf "\b\b\b\b\b"
+    done
+    wait "${spinner_pid}"
+    printf "    \b\b\b\b"
+}
+
 #######################################
 # Support functions for commands
 #######################################
@@ -813,14 +828,15 @@ create_stack_parse_response() {
     while [ "$(get_stack_status)" != "ERRORED" ] \
       && [ "$(get_stack_status)" != "COMPLETED" ] \
       && [ "$(get_stack_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment... $(get_stack_status)"
+      printf "\rStack under deployment... %s" "$(get_stack_status)"
       sleep 5
-    done
+    done &
+    spinner "$!"
   fi
 
   # print final stack status
   if [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
-    echo "Stack finished with $(get_stack_status) status"
+    printf "\nStack finished with %s status" "$(get_stack_status)"
     exit 0
   else
     echo "Stack created. To run it go to the Dashboard!"
@@ -860,14 +876,15 @@ apply_stack_parse_response() {
     while [ "$(get_stack_status)" != "ERRORED" ] \
       && [ "$(get_stack_status)" != "COMPLETED" ] \
       && [ "$(get_stack_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment... $(get_stack_status)"
+      printf "\rStack under deployment... %s" "$(get_stack_status)"
       sleep 5
-    done
+    done &
+    spinner "$!"
   fi
 
   # print final stack status
   if [ "${wait_execution}" = "true" ]; then
-    echo "Stack finished with $(get_stack_status) status"
+    printf "\nStack finished with %s status" "$(get_stack_status)"
     exit 0
   else
     echo "Stack apply executed."
@@ -899,17 +916,18 @@ destroy_stack_parse_response() {
   # check stackrun status
   if [ "${wait_execution}" = "true" ]; then
     echo "Stack destroy executed"
-    while [ "$(get_stackrun_status)" != "ERRORED" ] \
-      && [ "$(get_stackrun_status)" != "COMPLETED" ] \
-      && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment... $(get_stackrun_status)"
+        while [ "$(get_stack_status)" != "ERRORED" ] \
+      && [ "$(get_stack_status)" != "COMPLETED" ] \
+      && [ "$(get_stack_status)" != "APPROVAL_REQUIRED" ]; do
+      printf "\rStack under deployment... %s" "$(get_stack_status)"
       sleep 5
-    done
+    done &
+    spinner "$!"
   fi
 
   # print final stack status
   if [ "${wait_execution}" = "true" ]; then
-    echo "Stack finished with $(get_stackrun_status) status"
+    printf "\nStack finished with %s status" "$(get_stackrun_status)"
     exit 0
   else
     echo "Stack destroy executed."
