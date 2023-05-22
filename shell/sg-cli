@@ -15,186 +15,211 @@ if ! type jq >/dev/null 2>&1; then
   exit 2
 fi
 
+#######################################
+# Helper functions for each command
+# Outputs:
+#   Prints help manual for command
+#######################################
 help() {
   cat <<EOF
 
-  ./$(basename "$0") RESOURCE OPTION --org <ORG_NAME>
+sg-cli is CLI command for managing resources on Stackguardian platform.
 
-  RESOURCES:
-    stack               manage stack resources
-    workflow            manage workflow resources
-    artifacts           manage artifacts
-    aws                 manage aws integration
+  More information available at: https://docs.qa.stackguardian.io/docs/
 
-EOF
-}
+Available commands:
+  stack               Manage stack resources
+  workflow            Manage workflow resources
+  artifacts           Manage artifacts
+  aws                 Manage aws integration
 
-aws_help() {
-  cat <<EOF
+Usage:
+  ./$(basename "$0") [options] -- [payload]
 
-  ./$(basename "$0") aws OPTION --org <ORG_NAME>
-
-  OPTIONS:
-    integrate            integrate aws with Stackguardian
-
-EOF
-}
-
-aws_integrate_help() {
-  cat <<EOF
-
-  ./$(basename "$0") aws integrate --org <ORG_NAME> -- <JSON_PAYLOAD_PATH>
-
-EOF
-}
-
-artifacts_help() {
-  cat <<EOF
-
-  ./$(basename "$0") artifacts OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <WORKFLOW_ID>
-
-  OPTIONS:
-    list_all            list all artifacts
-
-EOF
-}
-
-artifacts_list_all_help() {
-  cat <<EOF
-
-  ./$(basename "$0") artifacts list_all --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <WORKFLOW_ID>
-
-EOF
-}
-
-workflow_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
-
-  OPTIONS:
-    create              create new workflow
-    list_all            list all workflows
-    read                read workflow
-    delete              delete workflow
-    apply               execute workflow
-    destroy             run workflow destroy
-
+Use "./$(basename "$0") <command> --help" for more information about a given command.
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
 }
 
 stack_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack OPTION --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
+Manage stacks in Stackguardian platform.
 
-  OPTIONS:
-    create              create new stack
-    delete              delete stack
-    apply               execute stack
-    destroy             run stack destroy
+Examples:
+  # Create new stack
+  ./$(basename "$0") stack create --org demo-org --workflow-group demo-wfgrp -- payload.json
 
+  # Create new stack with custom name (rename 'ResourceName' in payload.json)
+  ./$(basename "$0") stack create --org demo-org --workflow-group demo-wfgrp --stack-id new-demo-stack -- payload.json
+
+  # Create new stack and patch for example "First Template Description"
+  ./$(basename "$0") stack create --org demo-org --workflow-group demo-wfgrp --patch-payload '{"TemplatesConfig": "templates": [{"Description": "First template in stack"}]}' -- payload.json
+
+  # Create new stack, run it and wait until finished
+  ./$(basename "$0") stack create --org demo-org --workflow-group demo-wfgrp --run --wait -- payload.json
+
+  # Execute "Apply" on existing stack
+  ./$(basename "$0") stack apply --org demo-org --workflow-group demo-wfgrp --stack-id demo-stack
+
+  # Delete stack
+  ./$(basename "$0") stack delete --org demo-org --workflow-group demo-wfgrp --stack-id demo-stack
+
+Sub-commands:
+  create      Create new workflow
+  delete      Delete the workflow from workflow group
+  apply       Execute "Apply" on existing workflow
+  destroy     Execute "Destroy" on existing workflow
+
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform.
+
+  --workflow-group '': (required)
+    The workflow group where stack will be created.
+
+  --stack-id '':
+    The stack id in the workflow group. Rename or select existing.
+
+  --run:
+    Execute "Apply" on newly created stack.
+
+  --wait:
+    Wait until stack execution has completed. Applicable only with --run.
+
+  --preview:
+    Preview payload content before applying. Execution will not pause.
+
+  --dry-run:
+    Similar to --preview. But execution will stop, nothing will be applied.
+
+  --patch-payload '{}':
+    Patch original payload.json input. Add or replace values. Requires valid JSON input.
+
+  --output-json:
+    Output execution response as json to STDIN.
+
+Usage:
+  ./$(basename "$0") stack <sub-command> --org org-name --workflow-group wfgrp-name [--stack-id stack-id] [--run] [--wait] [options] -- [payload]
+
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
 }
 
-stack_delete_help() {
+workflow_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack delete --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
+Manage workflows in Stackguardian platform.
 
+Examples:
+  # Create new workflow
+  ./$(basename "$0") workflow create --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf -- payload.json
+
+  # Create new workflow and patch for example "Description"
+  ./$(basename "$0") workflow create --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf --patch-payload '{"Description": "New workflow"}' -- payload.json
+
+  # Delete workflow
+  ./$(basename "$0") workflow delete --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf
+
+  # Execute "Apply" on existing workflow
+  ./$(basename "$0") workflow apply --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf
+
+  # List all workflows in workflow group
+  ./$(basename "$0") workflow list --org demo-org --workflow-group demo-wfgrp
+
+Sub-commands:
+  create      Create new workflow
+  delete      Delete the workflow from workflow group
+  apply       Execute "Apply" on existing workflow
+  destroy     Execute "Destroy" on existing workflow
+  read        Read, get details of a workflow
+  list        List artifacts
+
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform.
+
+  --workflow-group '': (required)
+    The workflow group under the organization.
+
+  --workflow-id '':
+    The workflow id in the workflow group.
+
+  --preview:
+    Preview payload content before applying. Execution will not pause.
+
+  --dry-run:
+    Similar to --preview. But execution will stop, nothing will be applied.
+
+  --patch-payload '{}':
+    Patch original payload.json input. Add or replace values. Requires valid JSON input.
+
+  --output-json:
+    Output execution response as json to STDIN.
+
+Usage:
+  ./$(basename "$0") workflow <sub-command> --org org-name --workflow-group wfgrp-name [--workflow-id wf-id] [options] -- [payload]
+
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
 }
 
-stack_create_help() {
+artifacts_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack create --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
+List artifacts on Stackguardian platform.
 
-  OPTIONS:
-    --wait              wait for stack creation, applicable only when --run is set
-    --run               run stack after creation
-    --preview           preview payload before applying
-    --dry-run           preview payload before applying (but do not create)
-    --stack-id        set stack name, can not be used with --patch-payload
-    --patch-payload     patch original json payload
-    --output-json       outputs the response as json
+Examples:
+  ./$(basename "$0") artifacts list --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf
 
+Sub-commands:
+  list   List artifacts
+
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform.
+
+  --workflow-group '': (required)
+    The workflow group under the organization.
+
+  --workflow-id '': (required)
+    The workflow id in the workflow group.
+
+Usage:
+  ./$(basename "$0") artifacts <sub-command> --org org-name --workflow-group wfgrp-name --workflow-id wf-id
+
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
 }
 
-stack_apply_help() {
+aws_help() {
   cat <<EOF
 
-  ./$(basename "$0") stack apply --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
+Configure AWS integration for Stackguardian platform.
 
+Examples:
+  ./$(basename "$0") aws integrate --org demo-org -- payload.json
+
+Sub-commands:
+  integrate   Create AWS integration
+
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform for which integration is created.
+
+Usage:
+  ./$(basename "$0") aws <sub-command> --org org-name -- payload
+
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
 }
 
-stack_destroy_help() {
-  cat <<EOF
-
-  ./$(basename "$0") stack destroy --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --stack-id <STACK_ID>
-
-EOF
-}
-
-workflow_delete_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow delete --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <WORKFLOW_ID>
-
-EOF
-}
-
-workflow_create_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow create --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> OPTIONS -- <JSON_PAYLOAD_PATH>
-
-  OPTIONS:
-    --preview           preview payload before applying
-    --dry-run           preview payload before applying (but do not create)
-    --workflow-id       set workflow name, can not be used with --patch-payload
-    --patch-payload     patch original json payload
-    --output-json       outputs the response as json
-
-EOF
-}
-
-workflow_apply_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow apply --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <STACK_ID>
-
-EOF
-}
-
-workflow_destroy_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow destroy --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <STACK_ID>
-
-EOF
-}
-
-workflow_read_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow read --org <ORG_NAME> --workflow-group <WF_GROUP_NAME> --workflow-id <WORKFLOW_ID>
-
-EOF
-}
-
-workflow_list_all_help() {
-  cat <<EOF
-
-  ./$(basename "$0") workflow list_all --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
-
-EOF
-}
+#######################################
+# Support functions for commands
+#######################################
 
 parse_response() {
-  full_response="$response"
+  # full_response="$response"
   status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
   response="$(echo "$response" | grep -E '^{.*')"
 
@@ -211,40 +236,6 @@ parse_response() {
   fi
 }
 
-create_stack() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
-    echo
-    echo "ERROR: parameters --org, --workflow-group and payload are required"
-    stack_create_help
-    exit 1
-  fi
-  runOnCreate=${run_on_create:-false}
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/?runOnCreate=$runOnCreate"
-  response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
-    -H "Authorization: apikey ${api_token}" \
-    -H "Content-Type: application/json" \
-    --data-raw "${payload}" "${url}")
-  parse_response "Stack creation failed"
-}
-
-# Create Delete Stack function
-delete_stack() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
-    echo
-    echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
-    stack_delete_help
-    exit 1
-  fi
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
-  response=$(curl -i -s --http1.1 -X DELETE \
-    -H 'PrincipalId: ""' \
-    -H "Authorization: apikey ${api_token}" \
-    -H "Content-Type: application/json" \
-    "${url}")
-  parse_response "Stack is not deleted"
-}
-
 get_stack() {
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
   response=$(curl -i -s --http1.1 -X GET \
@@ -252,7 +243,7 @@ get_stack() {
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
     "${url}")
-  parse_response "Retrieving Stack failed"
+  parse_response "Retrieving stack failed"
 }
 
 get_stack_status() {
@@ -280,7 +271,7 @@ get_wfruns_in_stackrun() {
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
     "${url}")
-  parse_response "Retrieving Workflow Run from StackRun failed"
+  parse_response "Retrieving workflow run from stack run failed"
 }
 
 get_workflow() {
@@ -290,7 +281,7 @@ get_workflow() {
     -H "Authorization: apikey ${api_token}" \
     -H "Content-Type: application/json" \
     "${url}")
-  parse_response "Retrieving Workflow failed"
+  parse_response "Retrieving workflow failed"
 }
 
 get_workflow_status() {
@@ -302,11 +293,95 @@ get_workflow_status() {
   fi
 }
 
+get_workflow_outputs() {
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/outputs"
+  response=$(curl -i -s --http1.1 -X GET \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    "${url}")
+  parse_response "Listing outputs from workflow failed"
+}
+
+
+#######################################
+# Create new stack
+# Globals:
+#   api_url
+#   api_token
+#   run_on_create
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   payload
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
+create_stack() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group and payload are required"
+    stack_help
+    exit 1
+  fi
+  runOnCreate=${run_on_create:-false}
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/?runOnCreate=$runOnCreate"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  parse_response "Stack creation failed"
+}
+
+#######################################
+# Delete stack
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   stack_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
+delete_stack() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
+    stack_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
+  response=$(curl -i -s --http1.1 -X DELETE \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    "${url}")
+  parse_response "Stack is not deleted"
+}
+
+#######################################
+# Apply stack
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   stack_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 apply_stack() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
-    stack_apply_help
+    stack_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns/"
@@ -318,11 +393,24 @@ apply_stack() {
   parse_response "Executing Stack failed"
 }
 
+#######################################
+# Destroy stack
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   stack_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 destroy_stack() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${stack_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --stack-id are required"
-    stack_destroy_help
+    stack_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns"
@@ -351,7 +439,7 @@ destroy_stack() {
 #     fi
 # }
 
-# list_all_workflows_inside_stack() {
+# list_workflows_inside_stack() {
 #     url="${api_url}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/listall/"
 #     response=$(curl -i -s --http1.1 -X GET \
 #       -H 'PrincipalId: ""' \
@@ -431,11 +519,23 @@ destroy_stack() {
 #     echo "${response}"
 # }
 
+#######################################
+# Create new workflow
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 create_workflow() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ]; then
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
     echo
-    echo "ERROR: parameters --org, --workflow-group are required"
-    workflow_create_help
+    echo "ERROR: parameters --org, --workflow-group and payload are required"
+    workflow_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
@@ -447,11 +547,23 @@ create_workflow() {
   parse_response "Workflow creation failed"
 }
 
-list_all_workflow() {
+#######################################
+# List all workflows
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
+list_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group are required"
-    workflow_list_all_help
+    workflow_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/listall/"
@@ -463,8 +575,20 @@ list_all_workflow() {
   parse_response "Listing all workflows failed"
 }
 
+#######################################
+# Run workflow
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 run_workflow() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --workflow-id are required"
     workflow_help
@@ -478,6 +602,19 @@ run_workflow() {
   parse_response "Executing workflow failed"
 }
 
+#######################################
+# Apply workflow
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 apply_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
@@ -494,6 +631,19 @@ apply_workflow() {
   parse_response "Executing workflow failed"
 }
 
+#######################################
+# Destroy workflow
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 destroy_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
@@ -510,11 +660,24 @@ destroy_workflow() {
   parse_response "Destroying workflow failed"
 }
 
+#######################################
+# Read workflow
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 read_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --workflow-id are required"
-    workflow_read_help
+    workflow_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
@@ -526,11 +689,24 @@ read_workflow() {
   parse_response "Reading workflow failed"
 }
 
+#######################################
+# Delete workflow
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
 delete_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --worklfow-id are required"
-    workflow_delete_help
+    workflow_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
@@ -542,12 +718,24 @@ delete_workflow() {
   parse_response "Deleting workflow failed"
 }
 
-
-list_all_artifacts() {
+#######################################
+# List artifacts
+# Globals:
+#   api_url
+#   api_token
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDOUT/STDER
+#   if successfull/error.
+#######################################
+list_artifacts() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${wf_id}" ]; then
     echo
     echo "ERROR: parameters --org, --workflow-group, --worklfow-id are required"
-    artifacts_list_all_help
+    artifacts_help
     exit 1
   fi
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/listall_artifacts"
@@ -559,16 +747,57 @@ list_all_artifacts() {
   parse_response "Listing all Artifacts from workflow failed"
 }
 
-get_workflow_outputs() {
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/outputs"
-  response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
-    -H "Authorization: apikey ${api_token}" \
-    -H "Content-Type: application/json" \
-    "${url}")
-  parse_response "Listing outputs from workflow failed"
+#######################################
+# AWS Integrate
+# Arguments:
+#   org_id
+#   payload
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
+integrate_aws(){
+  return_response=
+  if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
+    echo
+    echo "ERROR: parameter --org and payload must be provided"
+    aws_help
+    exit 1
+  fi
+  array_length="$(echo "${payload}" | jq '.[] | length')"
+  i=0
+  while [ ${i} -lt "${array_length}" ]; do
+    object_payload=$(echo "${payload}" | jq ".[][$i]")
+    url="${api_url}/orgs/${org_id}/integrations"
+    response=$(curl -i -s --http1.1 -X POST \
+      -H 'PrincipalId: ""' \
+      -H "Authorization: apikey ${api_token}" \
+      -H "Content-Type: application/json" \
+      --data-raw "${object_payload}" "${url}")
+    parse_response "Integration creation failed"
+    if echo "${response}" | grep -q '"data"'; then
+      return_response="${return_response}\n${response}"
+    fi
+    i=$(( $i + 1 ))
+  done
+  echo "${return_response}" | jq
 }
 
+#######################################
+# Parse 'stack create' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+#   run_on_create
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   stack_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
 create_stack_parse_response() {
   if [ "${response}" != "" ]; then
     stack_id=${stack_id:-$(echo "${response}" | jq -r '.data.stack.ResourceName')}
@@ -581,10 +810,10 @@ create_stack_parse_response() {
   # check stackrun status
   if [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
     echo "Stack run executed"
-    while [ "$(get_stackrun_status)" != "ERRORED" ] \
-      && [ "$(get_stackrun_status)" != "COMPLETED" ] \
-      && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment... $(get_stackrun_status)"
+    while [ "$(get_stack_status)" != "ERRORED" ] \
+      && [ "$(get_stack_status)" != "COMPLETED" ] \
+      && [ "$(get_stack_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Stack under deployment... $(get_stack_status)"
       sleep 5
     done
   fi
@@ -599,66 +828,24 @@ create_stack_parse_response() {
   fi
 }
 
-run_workflow_parse_response() {
-  if [ "${response}" != "" ]; then
-    # wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
-    wf_run_id=$(echo "${response}" | jq -r '.data.ResourceName')
-    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
-  else
-    exit 1
-  fi
-
-  # check stackrun status
-  if [ "${wait_execution}" = "true" ]; then
-    echo "Workflow run executed"
-    while [ "$(get_workflow_status)" != "ERRORED" ] \
-      && [ "$(get_workflow_status)" != "COMPLETED" ] \
-      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Workflow under deployment... $(get_stackrun_status)"
-      sleep 5
-    done
-  fi
-
-  # print final stack status
-  if [ "${wait_execution}" = "true" ]; then
-    echo "Workflow finished with $(get_workflow_status) status"
-    exit 0
-  else
-    echo "Workflow executed."
-    exit 0
-  fi
+delete_stack_parse_response() {
+  echo "${response}" | jq
+  exit 0
 }
 
-apply_workflow_parse_response() {
-  if [ "${response}" != "" ]; then
-    # wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
-    wf_run_id=$(echo "${response}" | jq -r '.data.ResourceName')
-    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
-  else
-    exit 1
-  fi
-
-  # check stackrun status
-  if [ "${wait_execution}" = "true" ]; then
-    echo "Workflow run executed"
-    while [ "$(get_workflow_status)" != "ERRORED" ] \
-      && [ "$(get_workflow_status)" != "COMPLETED" ] \
-      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Workflow under deployment... $(get_stackrun_status)"
-      sleep 5
-    done
-  fi
-
-  # print final stack status
-  if [ "${wait_execution}" = "true" ]; then
-    echo "Workflow finished with $(get_workflow_status) status"
-    exit 0
-  else
-    echo "Workflow executed."
-    exit 0
-  fi
-}
-
+#######################################
+# Parse 'stack apply' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
 apply_stack_parse_response() {
   if [ "${response}" != "" ]; then
     stack_run_id=$(echo "${response}" | jq -r '.data.StackRunId')
@@ -669,11 +856,11 @@ apply_stack_parse_response() {
 
   # check stackrun status
   if [ "${wait_execution}" = "true" ]; then
-    echo "Stack run executed"
-    while [ "$(get_stackrun_status)" != "ERRORED" ] \
-      && [ "$(get_stackrun_status)" != "COMPLETED" ] \
-      && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
-      echo "Stack under deployment... $(get_stackrun_status) $(get_stackrun_status)"
+    echo "Stack apply executed"
+    while [ "$(get_stack_status)" != "ERRORED" ] \
+      && [ "$(get_stack_status)" != "COMPLETED" ] \
+      && [ "$(get_stack_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Stack under deployment... $(get_stack_status)"
       sleep 5
     done
   fi
@@ -683,14 +870,26 @@ apply_stack_parse_response() {
     echo "Stack finished with $(get_stack_status) status"
     exit 0
   else
-    echo "Stack executed."
+    echo "Stack apply executed."
     exit 0
   fi
 }
 
+#######################################
+# Parse 'stack destroy' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
 destroy_stack_parse_response() {
   if [ "${response}" != "" ]; then
-    stack_id=${stack_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
     stack_run_id=$(echo "${response}" | jq -r '.data.StackRunId')
     echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
   else
@@ -699,7 +898,7 @@ destroy_stack_parse_response() {
 
   # check stackrun status
   if [ "${wait_execution}" = "true" ]; then
-    echo "Stack run executed"
+    echo "Stack destroy executed"
     while [ "$(get_stackrun_status)" != "ERRORED" ] \
       && [ "$(get_stackrun_status)" != "COMPLETED" ] \
       && [ "$(get_stackrun_status)" != "APPROVAL_REQUIRED" ]; do
@@ -710,47 +909,28 @@ destroy_stack_parse_response() {
 
   # print final stack status
   if [ "${wait_execution}" = "true" ]; then
-    echo "Stack finished with $(get_stack_status) status"
+    echo "Stack finished with $(get_stackrun_status) status"
     exit 0
   else
-    echo "Stack executed."
+    echo "Stack destroy executed."
     exit 0
   fi
 }
 
-integrate_aws(){
-  return_response=
-  if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
-    echo
-    echo "ERROR: parameter --org and payload must be provided"
-    aws_integrate_help
-    exit 1
-  fi
-  array_length="$(echo "${payload}" | jq '.[] | length')"
-  i=0
-  while [ ${i} -lt "${array_length}" ]; do
-    object_payload=$(echo "${payload}" | jq ".[][$i]")
-    url="${api_url}/orgs/${org_id}/integrations"
-    response=$(curl -i -s --http1.1 -X POST \
-      -H 'PrincipalId: ""' \
-      -H "Authorization: apikey ${api_token}" \
-      -H "Content-Type: application/json" \
-      --data-raw "${object_payload}" "${url}")
-    parse_response "Integration creation failed"
-    if [ $? -eq 0 ] && echo "${response}" | grep -q "\"data\""; then
-      return_response="${return_response}\n${response}"
-    fi
-    i=$(( $i + 1 ))
-  done
-  echo "${return_response}" | jq
-}
-
-
-delete_stack_parse_response() {
-  echo "${response}" | jq
-  exit 0
-}
-
+#######################################
+# Parse 'workflow create' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
 create_workflow_parse_response() {
   if [ "${response}" != "" ]; then
     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
@@ -762,18 +942,18 @@ create_workflow_parse_response() {
     exit 1
   fi
 
-  # check stackrun status
+  # check workflowrun status
   # if [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
   #   echo "Workflow run executed"
   #   while [ "$(get_workflow_outputs)" != "ERRORED" ] \
   #       && [ "$(get_workflow_outputs)" != "COMPLETED" ] \
   #       && [ "$(get_workflow_outputs)" != "APPROVAL_REQUIRED" ]; do
-  #       echo "Workflow under deployment... $(get_stackrun_status)"
+  #       echo "Workflow under deployment... $(get_workflow_status)"
   #       sleep 5
   #   done
   # fi
 
-  # print final stack status
+  # print final workflow status
   # if [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
   #   get_workflow_outputs
   #   # echo "Workflow finished with $(get_workflow_status) status"
@@ -784,7 +964,159 @@ create_workflow_parse_response() {
   # fi
 }
 
-list_all_workflow_parse_response() {
+delete_workflow_parse_response() {
+  echo "${response}" | jq
+  exit 0
+}
+
+#######################################
+# Parse 'workflow run' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
+run_workflow_parse_response() {
+  if [ "${response}" != "" ]; then
+    # wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
+    wf_run_id=$(echo "${response}" | jq -r '.data.ResourceName')
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
+  else
+    exit 1
+  fi
+
+  # check workfluwrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow run executed"
+    while [ "$(get_workflow_status)" != "ERRORED" ] \
+      && [ "$(get_workflow_status)" != "COMPLETED" ] \
+      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Workflow under deployment... $(get_workflow_status)"
+      sleep 5
+    done
+  fi
+
+  # print final workflow status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow finished with $(get_workflow_status) status"
+    exit 0
+  else
+    echo "Workflow run executed."
+    exit 0
+  fi
+}
+
+#######################################
+# Parse 'workflow apply' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
+apply_workflow_parse_response() {
+  if [ "${response}" != "" ]; then
+    # wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.StackRunId')}
+    wf_run_id=$(echo "${response}" | jq -r '.data.ResourceName')
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
+  else
+    exit 1
+  fi
+
+  # check workflowrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow apply executed"
+    while [ "$(get_workflow_status)" != "ERRORED" ] \
+      && [ "$(get_workflow_status)" != "COMPLETED" ] \
+      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Workflow under deployment... $(get_workflow_status)"
+      sleep 5
+    done
+  fi
+
+  # print final workflow status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow finished with $(get_workflow_status) status"
+    exit 0
+  else
+    echo "Workflow apply executed."
+    exit 0
+  fi
+}
+
+#######################################
+# Parse 'workflow destroy' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
+destroy_stack_parse_response() {
+  if [ "${response}" != "" ]; then
+    wf_run_id=$(echo "${response}" | jq -r '.data.ResourceName')
+    echo "${dashboard_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
+  else
+    exit 1
+  fi
+
+  # check workflowrun status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow destroy executed"
+    while [ "$(get_workflow_status)" != "ERRORED" ] \
+      && [ "$(get_workflow_status)" != "COMPLETED" ] \
+      && [ "$(get_workflow_status)" != "APPROVAL_REQUIRED" ]; do
+      echo "Workflow under deployment... $(get_workflow_status)"
+      sleep 5
+    done
+  fi
+
+  # print final workflow status
+  if [ "${wait_execution}" = "true" ]; then
+    echo "Workflow finished with $(get_workflow_status) status"
+    exit 0
+  else
+    echo "Workflow destroy executed."
+    exit 0
+  fi
+}
+
+read_workflow_parse_response() {
+  echo "${response}" | jq
+  exit 0
+}
+
+#######################################
+# Parse 'workflow list' response
+# Globals:
+#   dashboard_url
+#   response
+#   wait_execution
+# Arguments:
+#   org_id
+#   wfgrp_id
+#   wf_id
+# Outputs:
+#   Write to STDIN/STDERR
+#   if successfull/error.
+#######################################
+list_workflow_parse_response() {
   if [ "${response}" != "" ]; then
     printf ">> List of wrofklows\n * group: %s\n * organization: %s\n\n" "${wfgrp_id}" "${org_id}"
     mkfifo response_pipe
@@ -801,17 +1133,7 @@ list_all_workflow_parse_response() {
   fi
 }
 
-read_workflow_parse_response() {
-  echo "${response}" | jq
-  exit 0
-}
-
-delete_workflow_parse_response() {
-  echo "${response}" | jq
-  exit 0
-}
-
-list_all_artifacts_parse_response() {
+list_artifacts_parse_response() {
  echo "${response}" | jq
  exit 0
 }
@@ -821,37 +1143,9 @@ integrate_aws_parse_response() {
   exit 0
 }
 
-# main function
-main() {
-  org_id=${org}
-  wfgrp_id="$workflow_group"
-
-  if [ -n "${stack_id}" ] && [ -z "${json_patch}" ]; then
-    payload=$(echo "${payload}" | jq ".ResourceName = \"${stack_id}\"")
-  elif [ -n "${wf_id}" ] && [ -z "${json_patch}" ]; then
-    payload=$(echo "${payload}" | jq ".ResourceName = \"${wf_id}\"")
-  elif [ -n "${json_patch}" ]; then
-    patch_payload "$(get_root_patch_keys)"
-  fi
-  if [ "${dry_run}" = "true" ]; then
-    echo "${payload}" | jq
-    exit 0
-  elif [ "${preview_patch}" = "true" ]; then
-    echo "${payload}" | jq
-  fi
-
-  response=$("${service_option}"_"${service}")
-
-  if [ $? -ne 0 ]; then
-    echo "${response}"
-    exit 1
-  elif [ "${output_json}" ] && [ "${service_option}" != delete ] && [ "${service_option}" != read ]; then
-    echo "${response}"
-  fi
-
-  "${service_option}"_"${service}"_parse_response
-}
-
+#######################################
+# Other support functions
+#######################################
 check_patch_subkey() {
   if echo "${json_patch}" | jq -r "$1 | keys_unsorted[]"; then
     return 0
@@ -902,6 +1196,43 @@ patch_payload() {
   done
 }
 
+#######################################
+# Main function
+#######################################
+main() {
+  org_id=${org}
+  wfgrp_id="$workflow_group"
+
+  if [ -n "${stack_id}" ] && [ -z "${json_patch}" ]; then
+    payload=$(echo "${payload}" | jq ".ResourceName = \"${stack_id}\"")
+  elif [ -n "${wf_id}" ] && [ -z "${json_patch}" ]; then
+    payload=$(echo "${payload}" | jq ".ResourceName = \"${wf_id}\"")
+  elif [ -n "${json_patch}" ]; then
+    patch_payload "$(get_root_patch_keys)"
+  fi
+  if [ "${dry_run}" = "true" ]; then
+    echo "${payload}" | jq
+    exit 0
+  elif [ "${preview_patch}" = "true" ]; then
+    echo "${payload}" | jq
+  fi
+
+  response=$("${service_option}"_"${service}")
+
+  if [ $? -ne 0 ]; then
+    echo "${response}"
+    exit 1
+  elif [ "${output_json}" = "true" ]; then
+    echo "${response}"
+  fi
+
+  "${service_option}"_"${service}"_parse_response
+}
+
+
+#######################################
+# Input checks
+#######################################
 if [ -z "${api_token}" ] || [ "sgu_" != "${api_token:0:4}" ]; then
     echo "Invalid or no API Token provided. Expecting it in \"SG_API_TOKEN\" environment variable. Navigate to StackGuardian platform to get your api token: ${dashboard_url}/orgs/${org}/settings?tab=api_key"
     exit 1
@@ -912,16 +1243,15 @@ if [ $# -eq 0 ]; then
   exit 0
 fi
 
-
 case "$1" in
   stack)
     service="$1"
     case "$2" in
-      create|apply|destroy|delete)
+      create|delete|apply|destroy)
         service_option="$2"
         shift 2
         ;;
-      help)
+      help|--help|-h)
         stack_help
         exit 0
         ;;
@@ -935,11 +1265,11 @@ case "$1" in
   workflow)
     service="$1"
     case "$2" in
-      create|delete|read|list_all|apply|destroy|run)
+      create|delete|apply|run|destroy|read|list)
         service_option="$2"
         shift 2
         ;;
-      help)
+      help|--help|-h)
         workflow_help
         exit 0
         ;;
@@ -953,11 +1283,11 @@ case "$1" in
   artifacts)
     service="$1"
     case "$2" in
-      list_all)
+      list)
         service_option="$2"
         shift 2
         ;;
-      help)
+      help|--help|-h)
         artifacts_help
         exit 0
         ;;
@@ -975,7 +1305,7 @@ case "$1" in
         service_option="$2"
         shift 2
         ;;
-      help)
+      help | --help | -h)
         aws_help
         exit 0
         ;;
@@ -986,7 +1316,7 @@ case "$1" in
         exit 1
     esac
     ;;
-  help)
+  help|--help|-h)
     help
     exit 0
     ;;
@@ -1049,21 +1379,28 @@ while [ $# -gt 0 ]; do
         exit 1
       fi
       if [ -e "$1" ]; then
-        payload="$(cat "$1")"
+        if [ -f "$1" ]; then
+          payload="$(cat "$1")"
+        else
+          echo
+          echo "ERROR: '$1' is not recognized as file"
+          exit 1
+        fi
       else
         echo
         echo "ERROR: file $1 not found or does not exist"
+        exit 1
       fi
       break
       ;;
-    help)
-      "${service}"_"${service_option}"_help
+    help|--help|-h)
+      "${service}"_help
       exit 0
       ;;
     *)
       echo
       echo "ERROR: unknown option $1" >&2
-      "${service}"_"${service_option}"_help
+      "${service}"_help
       exit 1
       ;;
   esac
