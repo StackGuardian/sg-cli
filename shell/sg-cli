@@ -231,7 +231,7 @@ spinner() {
 #######################################
 
 parse_response() {
-  # full_response="$response"
+  full_response="$response"
   status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
   response="$(echo "$response" | sed -n '/^{.*/,$p' | tr '\n' ' ')"
 
@@ -241,11 +241,17 @@ parse_response() {
     [ -n "$status_code" ] && echo "Status code: ${status_code}"
     echo "Response: ${response}"
 
-    # echo "$full_response"
+    echo "$full_response"
     exit 1
   else
     echo "${response}" | jq
   fi
+}
+
+parse_response_no_exit() {
+  # full_response="$response"
+  status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
+  response="$(echo "$response" | sed -n '/^{.*/,$p' | tr '\n' ' ')"
 }
 
 workflow_create_help() {
@@ -293,24 +299,6 @@ workflow_list_all_help() {
   ./$(basename "$0") workflow list_all --org <ORG_NAME> --workflow-group <WF_GROUP_NAME>
 
 EOF
-}
-
-parse_response() {
-  full_response="$response"
-  status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
-  response="$(echo "$response" | grep -E '^{.*')"
-
-  if [ "$status_code" != "200" ] && [ "$status_code" != "201" ]; then
-    echo "== $1 =="
-    echo "URL: ${url}"
-    [ -n "$status_code" ] && echo "Status code: ${status_code}"
-    echo "Response: ${response}"
-
-    echo "$full_response"
-    exit 1
-  else
-    echo "${response}" | jq
-  fi
 }
 
 get_stack() {
@@ -652,47 +640,41 @@ create_workflow() {
     --data-raw "${payload}" "${url}")
   parse_response "Workflow creation failed"
 }
+
 bulk_create_workflow() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ]; then
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
     echo
-    echo "ERROR: parameters --org, --workflow-group are required"
-    workflow_create_help
+    echo "ERROR: parameters --org, --workflow-group and payload are required"
+    ## TODO: Add details to help for bulk_create_workflow
+    workflow_help
     exit 1
   fi
+  bulk_payload="$(echo "$payload")"
   url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
   # write a for loop to iterate over the list of workflows in payload
-  for workflow in "${payload[@]}"; do
+  for wfid in $(seq 0 "$(echo "$bulk_payload" | jq '. | length')"); do
     # Perform desired actions on each workflow
-    echo "Processing workflow: $workflow"
-    # Add your code here to perform operations on each workflow
-    response=$(curl -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
-    -H "Authorization: apikey ${api_token}" \
-    -H "Content-Type: application/json" \
-    --data-raw "${workflow}" "${url}")
-    if [ $? -eq 0 ] && echo "${response}" | grep -q -E "Workflow.*created"; then
-      if [ -z "${workflow[TfState]}" ]; then
-        echo "TfState is not provided for workflow: ${workflow[Name]}"
-        echo "Skipping the workflow"
-      else
-        echo "TfState is provided for workflow: ${workflow[Name]}"
-        echo "Updating the workflow"
-        url_for_getting_signed_url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${workflow[Name]}/tfstate_upload_url"
-        generate_signed_url=$(curl -s --http1.1 -X GET \
-                    -H 'PrincipalId: ""' \
-                    -H "Authorization: apikey ${api_token}" \
-                    -H "Content-Type: application/json" \
-                    "${url_for_getting_signed_url}")
-        signed_url=$generate_signed_url[msg]
-        echo "signed_url: $signed_url"
-        curl --upload-file "${workflow[TfState]}" "${signed_url}" -H "Content-Type: application/json"
-      fi
-      echo "${response}" | jq
+    payload="$(echo "$bulk_payload" | jq ".[$wfid]")"
+    echo "Processing workflow: $payload"
+    create_workflow
+    if [ "$(echo "$response" | jq '.TfState')" == "" ]; then
+      # echo "TfState is not provided for workflow: ${workflow[Name]}"
+      echo "Skipping the workflow"
     else
-      echo "== Workflow creation failed =="
-      echo "url: ${url}"
-      echo "response: ${response}"
+      # echo "TfState is provided for workflow: ${workflow[Name]}"
+      echo "Updating the workflow"
+      url_for_getting_signed_url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${workflow[Name]}/tfstate_upload_url"
+      response=$(curl -s --http1.1 -X GET \
+        -H 'PrincipalId: ""' \
+        -H "Authorization: apikey ${api_token}" \
+        -H "Content-Type: application/json" \
+        "${url_for_getting_signed_url}")
+      parse_response "Upload failed"
+      signed_url="$response"
+      echo "signed_url: $signed_url"
+      # curl --upload-file "${workflow[TfState]}" "${signed_url}" -H "Content-Type: application/json"
     fi
+      echo "${response}" | jq
   done
 }
 
@@ -1115,23 +1097,24 @@ integrate_aws(){
     aws_integrate_help
     exit 1
   fi
-  array_length="$(echo "${payload}" | jq '.[] | length')"
+  array_length="$(echo "${payload}" | jq '.awsAccounts | length')"
   i=0
   while [ ${i} -lt "${array_length}" ]; do
-    object_payload=$(echo "${payload}" | jq ".[][$i]")
+    object_payload=$(echo "${payload}" | jq ".awsAccounts[$i]")
+    object_name=$(echo "${object_payload}" | jq '.ResourceName')
     url="${api_url}/orgs/${org_id}/integrations"
     response=$(curl -i -s --http1.1 -X POST \
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey ${api_token}" \
       -H "Content-Type: application/json" \
       --data-raw "${object_payload}" "${url}")
-    parse_response "Integration creation failed"
-    if [ $? -eq 0 ] && echo "${response}" | grep -q "\"data\""; then
-      return_response="${return_response}\n${response}"
-    fi
+    parse_response_no_exit "Integration creation failed"
+    response="$(echo "${response}" | jq ".ResourceName = $object_name")"
+    response="$(echo "${response}" | jq ".status_code = $status_code")"
+    return_response="${return_response:-"{}"},${response}"
     i=$(( $i + 1 ))
   done
-  echo "${return_response}" | jq
+  echo "[${return_response}]" | jq
 }
 
 delete_stack_parse_response() {
@@ -1526,6 +1509,8 @@ main() {
   fi
 
   response=$("${service_option}"_"${service}")
+  echo "${response}"
+  exit 0
 
   if [ $? -ne 0 ]; then
     echo "${response}"
