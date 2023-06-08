@@ -1,0 +1,16 @@
+[
+  {
+    "CLIConfiguration": {
+      "WorkflowGroup": "test",
+      "TfStateFilePath": null
+    },
+    "ResourceName": "azure_aks-15"
+  },
+  {
+    "CLIConfiguration": {
+      "WorkflowGroup": "test",
+      "TfStateFilePath": null
+    },
+    "ResourceName": "azure_aks-16"
+  }
+]
