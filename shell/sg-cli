@@ -677,12 +677,17 @@ create_workflow() {
         generate_signed_url="${response}"
         signed_url="$(echo "${generate_signed_url}" | jq '.msg')"
         echo "Uploading state file to Stackguardian.."
+        tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}/tfstate.json"
+        mkdir -p "${tfstate_path}"
+        cp "${tf_state_file_path}" "${tfstate_path}"
         curl -X POST \
           -H "Content-Type: application/json" \
-          -F "file=@${tf_state_file_path}" \
+          -F "file=@${tfstate_path}" \
           "${signed_url}"
-        echo "Upload completed."
-        echo
+        parse_response "Upload failed"
+        [ $? -eq 0 ] && \
+          echo "Upload completed." &&\
+          echo
       fi
     done
   else
