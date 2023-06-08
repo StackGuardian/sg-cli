@@ -680,10 +680,10 @@ create_workflow() {
         tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}/tfstate.json"
         mkdir -p "${tfstate_path}"
         cp "${tf_state_file_path}" "${tfstate_path}"
-        curl -X POST \
+        response=$(curl -X POST \
           -H "Content-Type: application/json" \
           -F "file=@${tfstate_path}" \
-          "${signed_url}"
+          "${signed_url}")
         parse_response "Upload failed"
         [ $? -eq 0 ] && \
           echo "Upload completed." &&\
