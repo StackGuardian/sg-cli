@@ -683,9 +683,9 @@ create_workflow() {
         generate_signed_url="${response}"
         signed_url="$(echo "${generate_signed_url}" | jq '.msg')"
         echo "Uploading state file to Stackguardian.."
-        tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}/tfstate.json"
+        tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
         mkdir -p "${tfstate_path}"
-        cp "${tf_state_file_path}" "${tfstate_path}"
+        cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
         response=$(curl -X POST \
           -H "Content-Type: application/json" \
           -F "file=@${tfstate_path}" \
@@ -1173,7 +1173,7 @@ integrate_aws(){
     aws_integrate_help
     exit 1
   fi
-  
+
   array_length="$(echo "${payload}" | jq '.awsAccounts | length')"
   i=0
   while [ ${i} -lt "${array_length}" ]; do
