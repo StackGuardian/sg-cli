@@ -667,7 +667,7 @@ create_workflow() {
         echo
 
 
-      tf_state_file_path="$(echo "${workflow}" | jq -r '.CLIConfiguration.TFStateFilePath')"
+      tf_state_file_path="$(echo "${workflow}" | jq -r '.CLIConfiguration.TfStateFilePath')"
       if [ -z "${tf_state_file_path}" ] || [ "${tf_state_file_path}" = "null" ]; then
         echo "TfStateFilePath is not provided for workflow: $wf_id"
         echo "Skipping update of state file.."
