@@ -264,6 +264,12 @@ parse_response() {
   fi
 }
 
+parse_response_no_exit() {
+  # full_response="$response"
+  status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
+  response="$(echo "$response" | sed -n '/^{.*/,$p' | tr '\n' ' ')"
+}
+
 workflow_create_help() {
   cat <<EOF
 
@@ -711,6 +717,43 @@ create_workflow() {
   fi
 }
 
+bulk_create_workflow() {
+  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --workflow-group and payload are required"
+    ## TODO: Add details to help for bulk_create_workflow
+    workflow_help
+    exit 1
+  fi
+  bulk_payload="$(echo "$payload")"
+  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
+  # write a for loop to iterate over the list of workflows in payload
+  for wfid in $(seq 0 "$(echo "$bulk_payload" | jq '. | length')"); do
+    # Perform desired actions on each workflow
+    payload="$(echo "$bulk_payload" | jq ".[$wfid]")"
+    echo "Processing workflow: $payload"
+    create_workflow
+    if [ "$(echo "$response" | jq '.TfState')" == "" ]; then
+      # echo "TfState is not provided for workflow: ${workflow[Name]}"
+      echo "Skipping the workflow"
+    else
+      # echo "TfState is provided for workflow: ${workflow[Name]}"
+      echo "Updating the workflow"
+      url_for_getting_signed_url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${workflow[Name]}/tfstate_upload_url"
+      response=$(curl -s --http1.1 -X GET \
+        -H 'PrincipalId: ""' \
+        -H "Authorization: apikey ${api_token}" \
+        -H "Content-Type: application/json" \
+        "${url_for_getting_signed_url}")
+      parse_response "Upload failed"
+      signed_url="$response"
+      echo "signed_url: $signed_url"
+      # curl --upload-file "${workflow[TfState]}" "${signed_url}" -H "Content-Type: application/json"
+    fi
+      echo "${response}" | jq
+  done
+}
+
 #######################################
 # List all workflows
 # Globals:
@@ -1130,23 +1173,26 @@ integrate_aws(){
     aws_integrate_help
     exit 1
   fi
-  array_length="$(echo "${payload}" | jq '.[] | length')"
+  
+  array_length="$(echo "${payload}" | jq '.awsAccounts | length')"
   i=0
   while [ ${i} -lt "${array_length}" ]; do
-    object_payload=$(echo "${payload}" | jq ".[][$i]")
+    object_payload=$(echo "${payload}" | jq ".awsAccounts[$i]")
+    object_name=$(echo "${object_payload}" | jq '.ResourceName')
+
     url="${api_url}/orgs/${org_id}/integrations"
     response=$(curl -i -s --http1.1 -X POST \
       -H 'PrincipalId: ""' \
       -H "Authorization: apikey ${api_token}" \
       -H "Content-Type: application/json" \
       --data-raw "${object_payload}" "${url}")
-    parse_response "Integration creation failed"
-    if [ $? -eq 0 ] && echo "${response}" | grep -q "\"data\""; then
-      return_response="${return_response}\n${response}"
-    fi
+    parse_response_no_exit "Integration creation failed"
+    response="$(echo "${response}" | jq ".ResourceName = $object_name")"
+    response="$(echo "${response}" | jq ".status_code = $status_code")"
+    return_response="${return_response:-"{}"},${response}"
     i=$(( $i + 1 ))
   done
-  echo "${return_response}" | jq
+  echo "[${return_response}]" | jq
 }
 
 delete_stack_parse_response() {
