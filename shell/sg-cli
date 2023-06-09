@@ -688,7 +688,7 @@ create_workflow() {
         [ $? -eq 0 ] && \
           echo "Upload completed." &&\
         echo "Initiating Workflow"
-        url_to_create_workflow="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/?runOnCreate=$runOnCreate"
+        url_to_create_workflow="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
         response=$(curl -i -s --http1.1 -X POST \
         -H 'PrincipalId: ""' \
         -H "Authorization: apikey ${api_token}" \
