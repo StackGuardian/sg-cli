@@ -681,7 +681,9 @@ create_workflow() {
         "${url_for_getting_signed_url}")
         parse_response "Unable to fetch signed url."
         generate_signed_url="${response}"
-        signed_url="$(echo "${generate_signed_url}" | jq '.msg')"
+        # echo $generate_signed_url
+        signed_url="$(echo "${generate_signed_url}" | jq -r '.msg')"
+        # echo $signed_url
         echo "Uploading state file to Stackguardian.."
         tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
         mkdir -p "${tfstate_path}"
@@ -694,17 +696,17 @@ create_workflow() {
         [ $? -eq 0 ] && \
           echo "Upload completed." &&\
         echo "Initiating Workflow"
-        url_to_create_workflow="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
-        response=$(curl -i -s --http1.1 -X POST \
-        -H 'PrincipalId: ""' \
-        -H "Authorization: apikey ${api_token}" \
-        -H "Content-Type: application/json" \
-        --data-raw "${workflow}" \
-        "${url_to_create_workflow}")
-        parse_response "Failed to execute workflow"
-        [ $? -eq 0 ] && \
-          echo "Workflow executed"
-
+        # url_to_create_workflow="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
+        # response=$(curl -i -s --http1.1 -X POST \
+        # -H 'PrincipalId: ""' \
+        # -H "Authorization: apikey ${api_token}" \
+        # -H "Content-Type: application/json" \
+        # --data-raw "${workflow}" \
+        # "${url_to_create_workflow}")
+        # parse_response "Failed to execute workflow"
+        # [ $? -eq 0 ] && \
+        #   echo "Workflow executed"
+        apply_workflow
       fi
     done
   else

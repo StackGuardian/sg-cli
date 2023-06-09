@@ -2,15 +2,15 @@
   {
     "CLIConfiguration": {
       "WorkflowGroup": "test",
-      "TfStateFilePath": null
+      "TfStateFilePath": "./payload-workflow.json"
     },
-    "ResourceName": "azure_aks-15"
+    "ResourceName": "azure_aks-31"
   },
   {
     "CLIConfiguration": {
       "WorkflowGroup": "test",
-      "TfStateFilePath": null
+      "TfStateFilePath": "payload-workflow.json"
     },
-    "ResourceName": "azure_aks-16"
+    "ResourceName": "azure_aks-55"
   }
 ]
