@@ -239,16 +239,19 @@ spinner() {
 parse_response() {
   full_response="$response"
   status_code="$(echo "$response" | awk '/^HTTP/ {print $2}')"
+  status_cde="$(echo "$status_code" | awk '{split($0, a, " "); print a[1]}')"
   response="$(echo "$response" | sed -n '/^{.*/,$p' | tr '\n' ' ')"
 
   if [ -z "$status_code" ]; then
     echo "Unknown status code. API call was probably successfull."
     echo "${response}" | jq
-  elif [ "$status_code" != "200" ] && [ "$status_code" != "201" ]; then
+  elif [ "$status_code" != "200" ] && [ "$status_code" != "201" ] && [ "$status_code" != "100" ]; then
     echo
     echo "== $1 =="
     echo "URL: ${url}"
     [ -n "$status_code" ] && echo "Status code: ${status_code}"
+    echo "Message: $(echo "${response}" | jq -r '.msg')"
+    echo "========================"
     echo "Response: ${response}"
     echo "========================"
     echo
@@ -649,7 +652,11 @@ create_workflow() {
     exit 1
   fi
   if [ "${bulk_create}" = "true" ]; then
-    for workflow in $(echo "${payload}" | jq -c '.[]'); do
+    wf_count=$(echo "${payload}" | jq '. | length')
+    counter=0
+    while [ "$counter" -lt "$wf_count" ]; do
+      workflow="$(echo "${payload}" | jq ".[$counter]")"
+      counter=$(( counter+1 ))
       wf_id="$(echo "${workflow}" | jq -r '.ResourceName')"
       wfgrp_id="$(echo "${workflow}" | jq -r '.CLIConfiguration.WorkflowGroup')"
       url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
@@ -662,17 +669,20 @@ create_workflow() {
       -H "Content-Type: application/json" \
       --data-raw "${workflow}" "${url}")
       parse_response "Workflow creation failed"
-      [ $? -eq 0 ] && \
-        echo ">> Workflow created." && \
+      status_code=$?
+      if [ $status_code -eq 0 ]; then
+        echo ">> Workflow created."
         echo
-
+      else
+        continue
+      fi
 
       tf_state_file_path="$(echo "${workflow}" | jq -r '.CLIConfiguration.TfStateFilePath')"
       if [ -z "${tf_state_file_path}" ] || [ "${tf_state_file_path}" = "null" ]; then
         echo "TfStateFilePath is not provided for workflow: $wf_id"
-        echo "Skipping update of state file.."
+        echo ">> Skipping update of state file.."
       else
-        echo "Updating the workflow..."
+        echo ">> Updating the workflow..."
         url_for_getting_signed_url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
         response=$(curl -i -s --http1.1 -X GET \
         -H 'PrincipalId: ""' \
@@ -681,32 +691,31 @@ create_workflow() {
         "${url_for_getting_signed_url}")
         parse_response "Unable to fetch signed url."
         generate_signed_url="${response}"
-        # echo $generate_signed_url
-        signed_url="$(echo "${generate_signed_url}" | jq -r '.msg')"
-        # echo $signed_url
-        echo "Uploading state file to Stackguardian.."
+        url="$(echo "${generate_signed_url}" | jq -r '.msg')"
+        echo ">> Uploading state file to Stackguardian.."
         tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
         mkdir -p "${tfstate_path}"
         cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
-        response=$(curl -X POST \
+        response=$(curl -i -X PUT \
+          -H "Accept: application/json, text/plain, */*" \
           -H "Content-Type: application/json" \
-          -F "file=@${tfstate_path}" \
-          "${signed_url}")
+          -H "ContentType: application/json" \
+          -T "${tfstate_path}/tfstate.json" \
+          "${url}")
         parse_response "Upload failed"
         [ $? -eq 0 ] && \
           echo "Upload completed." &&\
-        echo "Initiating Workflow"
-        # url_to_create_workflow="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
-        # response=$(curl -i -s --http1.1 -X POST \
-        # -H 'PrincipalId: ""' \
-        # -H "Authorization: apikey ${api_token}" \
-        # -H "Content-Type: application/json" \
-        # --data-raw "${workflow}" \
-        # "${url_to_create_workflow}")
-        # parse_response "Failed to execute workflow"
-        # [ $? -eq 0 ] && \
-        #   echo "Workflow executed"
-        apply_workflow
+        echo ">> Initiating Workflow"
+        url_to_dispatch="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
+        response=$(curl -i -s --http1.1 -X POST \
+        -H 'PrincipalId: ""' \
+        -H "Authorization: apikey ${api_token}" \
+        -H "Content-Type: application/json" \
+        --data-raw "$(echo "${workflow}" | jq ".TerraformConfig.approvalPreApply = true")" \
+        "${url_to_dispatch}")
+        parse_response "Failed to execute workflow"
+        [ $? -eq 0 ] && \
+          echo "Workflow executed"
       fi
     done
   else
@@ -717,43 +726,6 @@ create_workflow() {
       --data-raw "${payload}" "${url}")
     parse_response "Workflow creation failed"
   fi
-}
-
-bulk_create_workflow() {
-  if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
-    echo
-    echo "ERROR: parameters --org, --workflow-group and payload are required"
-    ## TODO: Add details to help for bulk_create_workflow
-    workflow_help
-    exit 1
-  fi
-  bulk_payload="$(echo "$payload")"
-  url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
-  # write a for loop to iterate over the list of workflows in payload
-  for wfid in $(seq 0 "$(echo "$bulk_payload" | jq '. | length')"); do
-    # Perform desired actions on each workflow
-    payload="$(echo "$bulk_payload" | jq ".[$wfid]")"
-    echo "Processing workflow: $payload"
-    create_workflow
-    if [ "$(echo "$response" | jq '.TfState')" == "" ]; then
-      # echo "TfState is not provided for workflow: ${workflow[Name]}"
-      echo "Skipping the workflow"
-    else
-      # echo "TfState is provided for workflow: ${workflow[Name]}"
-      echo "Updating the workflow"
-      url_for_getting_signed_url="${api_url}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${workflow[Name]}/tfstate_upload_url"
-      response=$(curl -s --http1.1 -X GET \
-        -H 'PrincipalId: ""' \
-        -H "Authorization: apikey ${api_token}" \
-        -H "Content-Type: application/json" \
-        "${url_for_getting_signed_url}")
-      parse_response "Upload failed"
-      signed_url="$response"
-      echo "signed_url: $signed_url"
-      # curl --upload-file "${workflow[TfState]}" "${signed_url}" -H "Content-Type: application/json"
-    fi
-      echo "${response}" | jq
-  done
 }
 
 #######################################
@@ -1759,7 +1731,12 @@ while [ $# -gt 0 ]; do
       fi
       if [ -e "$1" ]; then
         if [ -f "$1" ]; then
-          payload="$(cat "$1")"
+          if jq '.' "$1" >/dev/null 2>&1; then
+            payload="$(cat "$1")"
+          else
+            echo "ERROR: Invalid JSON format."
+            exit 1
+          fi
         else
           echo
           echo "ERROR: '$1' is not recognized as file"
