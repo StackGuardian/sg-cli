@@ -1,0 +1,27 @@
+{
+    "VCSConfig": {},
+    "WfStepsConfig": [
+        {
+            "wfStepTemplateId": "/stackguardian/steampipe:2",
+            "name": "steampipe",
+            "approval": false,
+            "timeout": 5400,
+            "wfStepInputData": {
+                "schemaType": "FORM_JSONSCHEMA",
+                "data": {
+                    "steampipeCheckArgs": "azure_compliance.benchmark.cis_v150",
+                    "awsRegion": "all"
+                }
+            }
+        }
+    ],
+    "WfType": "CUSTOM",
+    "DeploymentPlatformConfig": [
+        {
+            "config": {
+                "integrationId": "/integrations/AzureDummy1"
+            },
+            "kind": "AZURE_STATIC"
+        }
+    ]
+}

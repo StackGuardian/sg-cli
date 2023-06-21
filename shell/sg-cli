@@ -211,6 +211,29 @@ Use "./$(basename "$0") options" for a list of global command-line options (appi
 EOF
 }
 
+compliance_help() {
+  cat <<EOF
+Run compliance checks against integrations in Stackguardian platform.
+Examples:
+  ./$(basename "$0") compliance aws --org demo-org --region eu-central-1 --integration-name aws-account -- payload.json
+Sub-commands:
+  aws           run compliance checks against aws integration
+  azure         run compliance checks against azure integration
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform for which integration is created.
+  
+  --region '': (required aws)
+    The region to run compliance discovery for the integration.
+  --integration-name '': (required)
+    The integration name on Stackguardian platform for which compliance discovery is run.
+Usage:
+  ./$(basename "$0") compliance <sub-command> --org org-name --region eu-central-1 --integration-name aws-account -- payload
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
+EOF
+}
+
+
 spinner() {
     spinner_pid=$1
     # delay=0.15
@@ -625,6 +648,38 @@ outputs_stack() {
 #   Write to STDOUT/STDER
 #   if successfull/error.
 #######################################
+aws_compliance() {
+  if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+    compliance_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  parse_response "aws Compliance run failed"
+}
+
+azure_compliance() {
+  if [ -z "${org_id}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --integration-name and payload are required"
+    compliance_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_all/wfruns/"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  parse_response "azure Compliance run failed"
+}
+
 create_workflow() {
   if [ -z "${org_id}" ] || [ -z "${wfgrp_id}" ] || [ -z "${payload}" ]; then
     echo
@@ -1346,6 +1401,30 @@ apply_workflow_parse_response() {
   fi
 }
 
+aws_compliance_parse_response() {
+  if [ "${response}" != "" ] ; then
+    wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+    # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+    echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+    echo "aws Compliance discovery run successful. To see it go to the Dashboard!"
+    exit 0
+  else
+    exit 1
+  fi
+}
+
+azure_compliance_parse_response() {
+  if [ "${response}" != "" ] ; then
+    wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+    # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+    echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+    echo "azure Compliance discovery run successful. To see it go to the Dashboard!"
+    exit 0
+  else
+    exit 1
+  fi
+}
+
 #######################################
 # Parse 'workflow destroy' response
 # Globals:
@@ -1609,6 +1688,24 @@ case "$1" in
         exit 1
     esac
     ;;
+  compliance)
+    service="$1"
+    case "$2" in
+      aws|azure)
+        service_option="$2"
+        shift 2
+        ;;
+      help | --help | -h)
+        compliance_help
+        exit 0
+        ;;
+      *)
+        echo
+        echo "ERROR: unknown option '$2'" >&2
+        compliance_help
+        exit 1
+    esac
+    ;;
   options)
     echo "There are no global options currently!"
     exit 0
@@ -1644,6 +1741,14 @@ while [ $# -gt 0 ]; do
       wf_id="$2"
       shift 2
       ;;
+    --region)
+      region="$2"
+      shift 2
+      ;;
+    --integration-name)
+      integration_name="$2"
+      shift 2
+      ;; 
     --wait)
       readonly wait_execution=true
       shift
