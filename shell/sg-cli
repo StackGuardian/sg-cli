@@ -32,6 +32,7 @@ Available commands:
   workflow            Manage workflow resources
   artifacts           Manage artifacts
   aws                 Manage aws integration
+  compliance          Manage compliance
 
 Usage:
   ./$(basename "$0") [options] -- [payload]
@@ -212,6 +213,33 @@ Options:
 
 Usage:
   ./$(basename "$0") aws <sub-command> --org org-name -- payload
+
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
+EOF
+}
+
+compliance_help() {
+  cat <<EOF
+
+Run compliance checks against integrations in Stackguardian platform.
+
+Examples:
+  ./$(basename "$0") compliance aws --org demo-org --region eu-central-1 --integration-name aws-account -- payload.json
+
+Sub-commands:
+  aws           run compliance checks against aws integration
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform for which integration is created.
+  
+  --region '': (required)
+    The region to run compliance discovery for the integration.
+
+  --integration-name '': (required)
+    The integration name on Stackguardian platform for which compliance discovery is run.
+
+Usage:
+  ./$(basename "$0") compliance <sub-command> --org org-name --region eu-central-1 --integration-name aws-account -- payload
 
 Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
@@ -727,7 +755,150 @@ create_workflow() {
     parse_response "Workflow creation failed"
   fi
 }
+ 
+aws_compliance() {
+  if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+    compliance_help
+    exit 1
+  fi
+  url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${api_token}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  parse_response "Compliance run failed"
+}
 
+# COST_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "COST Compliance run failed"
+# }
+
+# CIS_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "CIS Compliance run failed"
+# }
+
+# CISA_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "CISA Compliance run failed"
+# }
+
+# GDPR_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "GDPR Compliance run failed"
+# }
+
+# HIPAA_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "HIPAA Compliance run failed"
+# }
+
+# NIST_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "NIST Compliance run failed"
+# }
+
+# PCIDSS_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "PCIDSS Compliance run failed"
+# }
+
+# SOC2_compliance() {
+#   if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+#     echo
+#     echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+#     compliance_help
+#     exit 1
+#   fi
+#   url="${api_url}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+#   response=$(curl -i -s --http1.1 -X POST \
+#     -H 'PrincipalId: ""' \
+#     -H "Authorization: apikey ${api_token}" \
+#     -H "Content-Type: application/json" \
+#     --data-raw "${payload}" "${url}")
+#   parse_response "SOC2 Compliance run failed"
+# }
 #######################################
 # List all workflows
 # Globals:
@@ -1476,6 +1647,114 @@ list_workflow_parse_response() {
   fi
 }
 
+aws_compliance_parse_response() {
+  if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+    wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+    # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+    echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+    echo "Compliance discovery run successful. To see it go to the Dashboard!"
+    exit 0
+  else
+    exit 1
+  fi
+}
+
+# COST_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "COST Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# CIS_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "CIS Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# CISA_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "CISA Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# GDPR_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "GDPR Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# HIPAA_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "HIPAA Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# NIST_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "NIST Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# PCIDSS_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "PCIDSS Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
+# SOC2_compliance_parse_response() {
+#   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
+#     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+#     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+#     echo "${dashboard_url}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+#     echo "SOC2 Compliance discovery run successful. To see it go to the Dashboard!"
+#     exit 0
+#   else
+#     exit 1
+#   fi
+# }
+
 list_artifacts_parse_response() {
  echo "${response}" | jq
  exit 0
@@ -1659,6 +1938,24 @@ case "$1" in
         exit 1
     esac
     ;;
+  compliance)
+    service="$1"
+    case "$2" in
+      aws)
+        service_option="$2"
+        shift 2
+        ;;
+      help | --help | -h)
+        compliance_help
+        exit 0
+        ;;
+      *)
+        echo
+        echo "ERROR: unknown option '$2'" >&2
+        compliance_help
+        exit 1
+    esac
+    ;;
   options)
     echo "There are no global options currently!"
     exit 0
@@ -1694,6 +1991,14 @@ while [ $# -gt 0 ]; do
       wf_id="$2"
       shift 2
       ;;
+    --region)
+      region="$2"
+      shift 2
+      ;;
+     --integration-name)
+      integration_name="$2"
+      shift 2
+      ;; 
     --bulk)
       readonly bulk_create=true
       shift
