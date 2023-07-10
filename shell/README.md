@@ -136,3 +136,45 @@ Payload will look like the follwing:
   "custom_key": "custom_value"
 }
 ```
+
+Example 6: Bulk onboard cloud accounts
+```
+./sg-cli aws integrate --org demo-org  -- payload.json
+```
+
+Payload will look like the follwing:
+> It should contain an array of AWS account objects under the key `awsAccounts`
+```
+{
+  "awsAccounts": [
+    {
+      "ResourceName": "Dummy123",
+      "Description": "dummy account",
+      "Settings": {
+        "kind": "AWS_STATIC",
+        "config": [
+          {
+            "awsAccessKeyId": "hi-its-me-a-dummy-account",
+            "awsSecretAccessKey": "keep-your-secrets-safe",
+            "awsDefaultRegion": "us-east-1"
+          }
+        ]
+      }
+    },
+    {
+      "ResourceName": "Dummy11345",
+      "Description": "dummy account",
+      "Settings": {
+        "kind": "AWS_STATIC",
+        "config": [
+          {
+            "awsAccessKeyId": "hi-its-me-a-dummy-account",
+            "awsSecretAccessKey": "keep-your-secrets-safe",
+            "awsDefaultRegion": "us-east-1"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
