@@ -8,6 +8,7 @@ SG_BASE_URL (default: https://api.app.stackguardian.io)
 SG_API_TOKEN
 SG_DASHBOARD_URL (default: https://app.stackguardian.io/orchestrator)
 ```
+Install jq in your environment: https://jqlang.github.io/jq/download/
 
 ### 2: Required input
 
