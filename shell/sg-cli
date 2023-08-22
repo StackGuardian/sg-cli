@@ -342,7 +342,7 @@ parse_response() { #{{{
 
   # msg from data
   message="$(echo "$response" \
-    | yq -r '.msg')"
+    | jq -r '.msg')"
 
   if [ -z "$status_code" ]; then
     err "Unknown status code."
