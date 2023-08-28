@@ -1881,7 +1881,7 @@ while [ $# -gt 0 ]; do
       ;;
     --patch-payload)
       if echo "$2" | jq '.' >/dev/null 2>&1; then
-        json_patch="$(cat "$1")"
+        json_patch="$2"
       else
         err "Invalid JSON format inside --patch-payload"
         exit 1
