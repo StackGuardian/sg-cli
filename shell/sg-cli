@@ -435,7 +435,7 @@ get_stack() { #{{{
 #}}}
 
 get_stack_status() { #{{{
-  response=$(get_stack)
+  get_stack
   if echo "${response}" | grep -q '"msg":' && echo "${response}" | grep -q '"LatestWfStatus":'; then
     echo "${response}" | jq -r '.msg.LatestWfStatus'
   else
@@ -477,7 +477,7 @@ get_workflow() { #{{{
 #}}}
 
 get_workflow_status() { #{{{
-  response=$(get_workflow)
+  get_workflow
   if echo "${response}" | grep -q '"msg":' && echo "${response}" | grep -q '"LatestStatus":'; then
     echo "${response}" | jq -r '.msg.LatestStatus'
   else
