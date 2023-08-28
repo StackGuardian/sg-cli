@@ -1750,7 +1750,7 @@ main() { #{{{
   "${service_option}"_"${service}"
 
   if [ "${output_json}" = "true" ]; then
-    echo "${response}"
+    echo "${response}" | jq
   fi
 
   "${service_option}"_"${service}"_parse_response
@@ -1880,7 +1880,12 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --patch-payload)
-      readonly json_patch="$2"
+      if echo "$2" | jq '.' >/dev/null 2>&1; then
+        json_patch="$(cat "$1")"
+      else
+        err "Invalid JSON format inside --patch-payload"
+        exit 1
+      fi
       shift 2
       ;;
     --preview)
