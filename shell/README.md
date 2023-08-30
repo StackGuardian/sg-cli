@@ -1,4 +1,4 @@
-## How to use .sh script to run stack on StackGuardian
+## StackGuardian CLI (sg-cli)
 
 ### 1: Setup
 
