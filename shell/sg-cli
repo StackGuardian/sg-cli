@@ -816,9 +816,6 @@ create_workflow() { #{{{ Create Workflow
       -H "Content-Type: application/json" \
       --data-raw "${workflow}" "${url}")
 
-      status_code="$(echo "$response" \
-      | awk '/^HTTP/ {print $2; exit}')"
-
       if parse_response; then
         echo "Workflow created."
         # getting information about state file
@@ -883,16 +880,20 @@ create_workflow() { #{{{ Create Workflow
             echo "Workflow Executed."
           fi
         fi
-      elif [ "$status_code" == "404" ]; then
-        echo "Workflow name not unique, updating workflow"
+      elif [ "$status_code" == "404" && "$message" == "Workflow name not unique" ]; then
+        echo "Workflow already exists, updating instead..."
         url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
-        response=$(curl  -s --http1.1 -X PATCH \
+        response=$(curl -i -s --http1.1 -X PATCH \
           -H 'PrincipalId: ""' \
           -H "Authorization: apikey ${API_TOKEN}" \
           -H "Content-Type: application/json" \
           --data-raw "${workflow}" "${url}")
-        message="$(echo "$response" | jq -r '.msg')"
-        echo ${message}
+        if ! parse_response; then
+          err_response "Failed To Execute Workflow"
+          continue
+        else
+          echo "Workflow Updated."
+        fi
         continue
       else
         err_response "Workflow failed to create."
