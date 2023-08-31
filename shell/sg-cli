@@ -815,75 +815,88 @@ create_workflow() { #{{{ Create Workflow
       -H "Authorization: apikey ${API_TOKEN}" \
       -H "Content-Type: application/json" \
       --data-raw "${workflow}" "${url}")
+
+      status_code="$(echo "$response" \
+      | awk '/^HTTP/ {print $2; exit}')"
+
       if parse_response; then
         echo "Workflow created."
-        echo
+        # getting information about state file
+        tf_state_file_path="$(echo "${workflow}" | jq -r '.CLIConfiguration.TfStateFilePath')"
+        if ! exists_or_notnull \
+          "tf_state_file_path" \
+          "TfStateFilePath is not provided for workflow: $wf_id"; then
+          echo ">> Skipping update of state file.."
+        else
+          echo ">> Updating the workflow..."
+          url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
+          response=$(curl -i -s --http1.1 -X GET \
+          -H 'PrincipalId: ""' \
+          -H "Authorization: apikey ${API_TOKEN}" \
+          -H "Content-Type: application/json" \
+          "${url_for_getting_signed_url}")
+          if ! parse_response; then
+            err_response "Unable to fetch signed url."
+            continue
+          fi
+
+          # fetching upload url
+          generate_signed_url="${response}"
+          url="$(echo "${generate_signed_url}" | jq -r '.msg')"
+          echo ">> Uploading state file to Stackguardian.."
+          tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
+          mkdir -p "${tfstate_path}"
+          if [ -f "$tf_state_file_path" ]; then
+            cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
+          else
+            warn "TfStateFilePath is not a file or does not exist"
+            continue
+          fi
+          response=$(curl -i -s -X PUT \
+            -H "Accept: application/json, text/plain, */*" \
+            -H "Content-Type: application/json" \
+            -H "ContentType: application/json" \
+            -T "${tfstate_path}/tfstate.json" \
+            "${url}")
+          if ! parse_response; then
+            err_response "Upload failed."
+            echo "$full_response"
+            continue
+          else
+            echo "Upload completed."
+            rm -r "$tfstate_path"
+            echo ">> Initiating Worfklow.."
+          fi
+
+          # trying to execute workflow after update
+          url_to_dispatch="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
+          response=$(curl -i -s --http1.1 -X POST \
+          -H 'PrincipalId: ""' \
+          -H "Authorization: apikey ${API_TOKEN}" \
+          -H "Content-Type: application/json" \
+          --data-raw "$(echo "${workflow}" | jq ".TerraformConfig.approvalPreApply = true")" \
+          "${url_to_dispatch}")
+          if ! parse_response; then
+            err_response "Failed To Execute Workflow"
+            continue
+          else
+            echo "Workflow Executed."
+          fi
+        fi
+      elif [ "$status_code" == "404" ]; then
+        echo "Workflow name not unique, updating workflow"
+        url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
+        response=$(curl  -s --http1.1 -X PATCH \
+          -H 'PrincipalId: ""' \
+          -H "Authorization: apikey ${API_TOKEN}" \
+          -H "Content-Type: application/json" \
+          --data-raw "${workflow}" "${url}")
+        message="$(echo "$response" | jq -r '.msg')"
+        echo ${message}
+        continue
       else
         err_response "Workflow failed to create."
         continue
-      fi
-
-      # getting information about state file
-      tf_state_file_path="$(echo "${workflow}" | jq -r '.CLIConfiguration.TfStateFilePath')"
-      if ! exists_or_notnull \
-            "tf_state_file_path" \
-            "TfStateFilePath is not provided for workflow: $wf_id"; then
-        echo ">> Skipping update of state file.."
-      else
-        echo ">> Updating the workflow..."
-        url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
-        response=$(curl -i -s --http1.1 -X GET \
-        -H 'PrincipalId: ""' \
-        -H "Authorization: apikey ${API_TOKEN}" \
-        -H "Content-Type: application/json" \
-        "${url_for_getting_signed_url}")
-        if ! parse_response; then
-          err_response "Unable to fetch signed url."
-          continue
-        fi
-
-        # fetching upload url
-        generate_signed_url="${response}"
-        url="$(echo "${generate_signed_url}" | jq -r '.msg')"
-        echo ">> Uploading state file to Stackguardian.."
-        tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
-        mkdir -p "${tfstate_path}"
-        if [ -f "$tf_state_file_path" ]; then
-          cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
-        else
-          warn "TfStateFilePath is not a file or does not exist"
-          continue
-        fi
-        response=$(curl -i -s -X PUT \
-          -H "Accept: application/json, text/plain, */*" \
-          -H "Content-Type: application/json" \
-          -H "ContentType: application/json" \
-          -T "${tfstate_path}/tfstate.json" \
-          "${url}")
-        if ! parse_response; then
-          err_response "Upload failed."
-          echo "$full_response"
-          continue
-        else
-          echo "Upload completed."
-          rm -r "$tfstate_path"
-          echo ">> Initiating Worfklow.."
-        fi
-
-        # trying to execute workflow after update
-        url_to_dispatch="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
-        response=$(curl -i -s --http1.1 -X POST \
-        -H 'PrincipalId: ""' \
-        -H "Authorization: apikey ${API_TOKEN}" \
-        -H "Content-Type: application/json" \
-        --data-raw "$(echo "${workflow}" | jq ".TerraformConfig.approvalPreApply = true")" \
-        "${url_to_dispatch}")
-        if ! parse_response; then
-          err_response "Failed To Execute Workflow"
-          continue
-        else
-          echo "Workflow Executed."
-        fi
       fi
     done
     [ -e "$org_id" ] && [ -d "$org_id" ] && rm -r "$org_id"
