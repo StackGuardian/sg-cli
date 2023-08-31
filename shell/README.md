@@ -178,3 +178,126 @@ Payload will look like the follwing:
   ]
 }
 ```
+
+Example 7: Bulk create workflows with tfstate files
+```
+./sg-cli workflow create --bulk --org demo-org --workflow-group demo-grp  -- payload.json
+```
+
+payload.json will look like the follwing:
+>  payload.json should contain an array of workflow objects
+```
+[{
+		"Approvers": [],
+		"CLIConfiguration": {
+			"TfStateFilePath": "/Users/richie/Documents/StackGuardian/stackguardian-migrator/transformer/tfc/../../out/state-files/akshat0694githubio.tfstate",
+			"WorkflowGroup": ""
+		},
+		"DeploymentPlatformConfig": [],
+		"Description": "",
+		"EnvironmentVariables": [],
+		"MiniSteps": {
+			"notifications": {
+				"email": {
+					"APPROVAL_REQUIRED": [],
+					"CANCELLED": [],
+					"COMPLETED": [],
+					"ERRORED": []
+				}
+			},
+			"wfChaining": {
+				"COMPLETED": [],
+				"ERRORED": []
+			}
+		},
+		"ResourceName": "akshat0694githubio",
+		"RunnerConstraints": {
+			"type": "shared"
+		},
+		"Tags": [],
+		"TerraformConfig": {
+			"managedTerraformState": true,
+			"terraformVersion": "1.1.6"
+		},
+		"UserSchedules": [],
+		"VCSConfig": {
+			"iacInputData": {
+				"data": {},
+				"schemaType": "RAW_JSON"
+			},
+			"iacVCSConfig": {
+				"customSource": {
+					"config": {
+						"auth": "PLEASE PROVIDE A VALUE",
+						"includeSubModule": false,
+						"isPrivate": true,
+						"ref": "",
+						"repo": "akshat0694.github.io",
+						"workingDir": ""
+					},
+					"sourceConfigDestKind": "PLEASE PROVIDE A VALUE"
+				},
+				"useMarketplaceTemplate": false
+			}
+		},
+		"WfType": "TERRAFORM",
+		"wfgrpName": ""
+	},
+	{
+		"Approvers": [],
+		"CLIConfiguration": {
+			"TfStateFilePath": "/Users/richie/Documents/StackGuardian/stackguardian-migrator/transformer/tfc/../../out/state-files/aws-terraform.tfstate",
+			"WorkflowGroup": ""
+		},
+		"DeploymentPlatformConfig": [],
+		"Description": "",
+		"EnvironmentVariables": [],
+		"MiniSteps": {
+			"notifications": {
+				"email": {
+					"APPROVAL_REQUIRED": [],
+					"CANCELLED": [],
+					"COMPLETED": [],
+					"ERRORED": []
+				}
+			},
+			"wfChaining": {
+				"COMPLETED": [],
+				"ERRORED": []
+			}
+		},
+		"ResourceName": "aws-terraform",
+		"RunnerConstraints": {
+			"type": "shared"
+		},
+		"Tags": [],
+		"TerraformConfig": {
+			"managedTerraformState": true,
+			"terraformVersion": "1.5.6"
+		},
+		"UserSchedules": [],
+		"VCSConfig": {
+			"iacInputData": {
+				"data": {},
+				"schemaType": "RAW_JSON"
+			},
+			"iacVCSConfig": {
+				"customSource": {
+					"config": {
+						"auth": "PLEASE PROVIDE A VALUE",
+						"includeSubModule": false,
+						"isPrivate": true,
+						"ref": "",
+						"repo": "aws-terraform",
+						"workingDir": ""
+					},
+					"sourceConfigDestKind": "PLEASE PROVIDE A VALUE"
+				},
+				"useMarketplaceTemplate": false
+			}
+		},
+		"WfType": "TERRAFORM",
+		"wfgrpName": ""
+	}
+]
+```
