@@ -184,7 +184,7 @@ Example 7: Bulk create workflows with tfstate files
 ./sg-cli workflow create --bulk --org demo-org --workflow-group demo-grp  -- payload.json
 ```
 
-payload.json will look like the follwing:
+payload.json will look like the following:
 >  payload.json should contain an array of workflow objects
 ```
 [{
