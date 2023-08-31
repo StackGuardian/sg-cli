@@ -1,0 +1,58 @@
+[
+    {
+        "Approvers": [],
+        "CLIConfiguration": {
+            "TfStateFilePath": "/Users/richie/Documents/StackGuardian/stackguardian-migrator/transformer/tfc/../../out/state-files/akshat0694githubio.tfstate",
+            "WorkflowGroup": ""
+        },
+        "DeploymentPlatformConfig": [],
+        "Description": "",
+        "EnvironmentVariables": [],
+        "MiniSteps": {
+            "notifications": {
+                "email": {
+                    "APPROVAL_REQUIRED": [],
+                    "CANCELLED": [],
+                    "COMPLETED": [],
+                    "ERRORED": []
+                }
+            },
+            "wfChaining": {
+                "COMPLETED": [],
+                "ERRORED": []
+            }
+        },
+        "ResourceName": "akshat0694githubio",
+        "RunnerConstraints": {
+            "type": "shared"
+        },
+        "Tags": [],
+        "TerraformConfig": {
+            "managedTerraformState": true,
+            "terraformVersion": "1.1.6"
+        },
+        "UserSchedules": [],
+        "VCSConfig": {
+            "iacInputData": {
+                "data": {},
+                "schemaType": "RAW_JSON"
+            },
+            "iacVCSConfig": {
+                "customSource": {
+                    "config": {
+                        "auth": "",
+                        "includeSubModule": false,
+                        "isPrivate": false,
+                        "ref": "",
+                        "repo": "https://gitlab.com/arunim.chaudhary/terraform-azurerm-vnet",
+                        "workingDir": ""
+                    },
+                    "sourceConfigDestKind": "GITLAB_COM"
+                },
+                "useMarketplaceTemplate": false
+            }
+        },
+        "WfType": "TERRAFORM",
+        "wfgrpName": ""
+    }
+]

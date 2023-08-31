@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# set -x
+
 ## Check Global Variables
 [ -f .env ] && . .env # if .env exists, source it
 
@@ -880,7 +882,7 @@ create_workflow() { #{{{ Create Workflow
             echo "Workflow Executed."
           fi
         fi
-      elif [ "$status_code" == "404" && "$message" == "Workflow name not unique" ]; then
+      elif [ "$status_code" == "404" ]; then
         echo "Workflow already exists, updating instead..."
         url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
         response=$(curl -i -s --http1.1 -X PATCH \
