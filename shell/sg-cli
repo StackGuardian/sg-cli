@@ -141,7 +141,7 @@ Examples:
 
   # Create new stack with custom name (rename 'ResourceName' in payload.json)
   ./$(basename "$0") stack create --org demo-org --workflow-group demo-wfgrp --stack-id new-demo-stack -- payload.json
-
+  
   # Create new stack and patch for example "First Template Description"
   ./$(basename "$0") stack create --org demo-org --workflow-group demo-wfgrp --patch-payload '{"TemplatesConfig": "templates": [{"Description": "First template in stack"}]}' -- payload.json
 
@@ -868,18 +868,20 @@ create_workflow() { #{{{ Create Workflow
           fi
 
           # trying to execute workflow after update
-          url_to_dispatch="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
-          response=$(curl -i -s --http1.1 -X POST \
-          -H 'PrincipalId: ""' \
-          -H "Authorization: apikey ${API_TOKEN}" \
-          -H "Content-Type: application/json" \
-          --data-raw "$(echo "${workflow}" | jq ".TerraformConfig.approvalPreApply = true")" \
-          "${url_to_dispatch}")
-          if ! parse_response; then
-            err_response "Failed To Execute Workflow"
-            continue
-          else
-            echo "Workflow Executed."
+          if [ "${run_on_create}" = "true" ]; then
+            url_to_dispatch="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
+            response=$(curl -i -s --http1.1 -X POST \
+            -H 'PrincipalId: ""' \
+            -H "Authorization: apikey ${API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-raw "$(echo "${workflow}" | jq ".TerraformConfig.approvalPreApply = true")" \
+            "${url_to_dispatch}")
+            if ! parse_response; then
+              err_response "Failed To Execute Workflow"
+              continue
+            else
+              echo "Workflow Executed."
+            fi
           fi
         fi
       elif [ "$status_code" == "404" ]; then
