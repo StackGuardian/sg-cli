@@ -1180,8 +1180,9 @@ get_workflow_outputs() { #{{{
 #   if successfull/error.
 #######################################
 create_stack_parse_response() { #{{{
+  outputjson=${output_json:-false}
   if [ "${response}" != "" ]; then
-    if [ "${output_json}" = "false" ]; then
+    if [ "${outputjson}" = "false" ]; then
       stack_id=${stack_id:-$(echo "${response}" | jq -r '.data.stack.ResourceName')}
       stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
       echo "${DASHBOARD_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
@@ -1203,7 +1204,7 @@ create_stack_parse_response() { #{{{
   fi
 
   # print final stack status
-  if [ "${output_json}" = "true" ]; then
+  if [ "${outputjson}" = "true" ]; then
     exit 0
   elif [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
     printf "\nStack finished with %s status" "$(get_stack_status)"
