@@ -1204,7 +1204,9 @@ create_stack_parse_response() { #{{{
   fi
 
   # print final stack status
-  if [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
+  if [ "${outputjson}" = "true" ]; then
+    exit 0
+  elif [ "${wait_execution}" = "true" ] && [ "${run_on_create}" = "true" ]; then
     printf "\nStack finished with %s status" "$(get_stack_status)"
     exit 0
   elif [ "${outputjson}" = "true" ]; then
