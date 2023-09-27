@@ -202,8 +202,11 @@ Examples:
   # Create new workflow
   ./$(basename "$0") workflow create --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf -- payload.json
 
-  # Bulk create new workflows
-  ./$(basename "$0") workflow create --org demo-org --workflow-group demo-wfgrp -- payload.json
+  # Bulk create new workflows ( Creates the workflow )
+  ./$(basename "$0") workflow create --bulk --org demo-org --workflow-group demo-wfgrp -- payload.json
+
+  # Bulk create new workflows ( Creates and executes the workflow )
+  ./$(basename "$0") workflow create --bulk --run --org demo-org --workflow-group demo-wfgrp -- payload.json
 
   # Create new workflow and patch for example "Description"
   ./$(basename "$0") workflow create --org demo-org --workflow-group demo-wfgrp --workflow-id demo-wf --patch-payload '{"Description": "New workflow"}' -- payload.json
@@ -237,6 +240,7 @@ Options:
 
   --bulk:
     Bulk import multiple workflows from JSON payload. Upload state files if they exist.
+    Add --run flag to execute  
 
   --preview:
     Preview payload content before applying. Execution will not pause.
@@ -257,6 +261,28 @@ Use "./$(basename "$0") options" for a list of global command-line options (appi
 EOF
 }
 #}}}
+
+compliance_help() {
+  cat <<EOF
+Run compliance checks against integrations in Stackguardian platform.
+Examples:
+  ./$(basename "$0") compliance aws --org demo-org --region eu-central-1 --integration-name aws-account -- payload.json
+Sub-commands:
+  aws           run compliance checks against aws integration
+  azure         run compliance checks against azure integration
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform for which integration is created.
+  
+  --region '': (required aws)
+    The region to run compliance discovery for the integration.
+  --integration-name '': (required)
+    The integration name on Stackguardian platform for which compliance discovery is run.
+Usage:
+  ./$(basename "$0") compliance <sub-command> --org org-name --region eu-central-1 --integration-name aws-account -- payload
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
+EOF
+}
 
 artifacts_help() { #{{{
   cat <<EOF
@@ -747,6 +773,63 @@ outputs_stack() { #{{{
   check_response_status "Faild To Get Outputs"
 }
 #}}}
+
+
+aws_compliance() {
+  if [ -z "${org_id}" ] || [ -z "${region}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --region, --integration-name and payload are required"
+    compliance_help
+    exit 1
+  fi
+  url="${API_URL}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${API_TOKEN}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  check_response_status "aws Compliance run failed"
+}
+
+azure_compliance() {
+  if [ -z "${org_id}" ] || [ -z "${integration_name}" ] || [ -z "${payload}" ]; then
+    echo
+    echo "ERROR: parameters --org, --integration-name and payload are required"
+    compliance_help
+    exit 1
+  fi
+  url="${API_URL}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_all/wfruns/"
+  response=$(curl -i -s --http1.1 -X POST \
+    -H 'PrincipalId: ""' \
+    -H "Authorization: apikey ${API_TOKEN}" \
+    -H "Content-Type: application/json" \
+    --data-raw "${payload}" "${url}")
+  check_response_status "azure Compliance run failed"
+}
+
+aws_compliance_parse_response() {
+  if [ "${response}" != "" ] ; then
+    wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+    # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+    echo "${DASHBOARD_URL}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+    echo "aws Compliance discovery run successful. To see it go to the Dashboard!"
+    exit 0
+  else
+    exit 1
+  fi
+}
+
+azure_compliance_parse_response() {
+  if [ "${response}" != "" ] ; then
+    wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
+    # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
+    echo "${DASHBOARD_URL}/orgs/${org_id}?integrations=&tab=integrations&integration-name=${integration_name}"   
+    echo "azure Compliance discovery run successful. To see it go to the Dashboard!"
+    exit 0
+  else
+    exit 1
+  fi
+}
 
 #######################################
 # Create New Workflow
@@ -1824,6 +1907,24 @@ case "$1" in
         exit 1
     esac
     ;;
+  compliance)
+    service="$1"
+    case "$2" in
+      aws|azure)
+        service_option="$2"
+        shift 2
+        ;;
+      help | --help | -h)
+        compliance_help
+        exit 0
+        ;;
+      *)
+        echo
+        echo "ERROR: unknown option '$2'" >&2
+        compliance_help
+        exit 1
+    esac
+    ;;
   artifacts)
     service="$1"
     case "$2" in
@@ -1890,6 +1991,14 @@ while [ $# -gt 0 ]; do
       wf_id="$2"
       shift 2
       ;;
+     --region)
+      region="$2"
+      shift 2
+      ;;
+    --integration-name)
+      integration_name="$2"
+      shift 2
+      ;; 
     --bulk)
       readonly bulk_create=true
       shift
