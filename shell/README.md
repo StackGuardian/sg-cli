@@ -301,3 +301,34 @@ payload.json will look like the following:
 	}
 ]
 ```
+
+
+Example 8: Run Compliance discovery against integrations
+```
+./sg-cli compliance aws --org demo-org --region eu-central-1 --integration-name aws-integ -- payload.json
+./sg-cli compliance azure --org demo-org --integration-name aws-integ -- payload.json
+```
+
+payload.json will look like the following:
+>  payload.json example
+```
+{
+    "VCSConfig": {},
+    "WfStepsConfig": [
+        {
+            "wfStepTemplateId": "/stackguardian/steampipe:2",
+            "name": "steampipe",
+            "approval": false,
+            "timeout": 5400,
+            "wfStepInputData": {
+                "schemaType": "FORM_JSONSCHEMA",
+                "data": {
+                    "steampipeCheckArgs": "azure_compliance.benchmark.cis_v150",
+                    "awsRegion": "all"
+                }
+            }
+        }
+    ],
+    "WfType": "CUSTOM",
+}
+```
