@@ -790,7 +790,6 @@ create_workflow() { #{{{ Create Workflow
       
       workflow_id=$(echo "${payload}" | jq -r ".[$counter].ResourceName")
       wf_id="${workflow_id}"
-      echo "${wf_id}"
       if ! exists_or_notnull \
             "wf_id" \
             "Workflow ResourceName is required in object payload"; then
@@ -818,7 +817,6 @@ create_workflow() { #{{{ Create Workflow
 
       temp_url=$(build_url "$org_id" "$wfgrp_id")
       url="${temp_url}"
-      echo"${url}"
 
       counter=$(( counter+1 ))
       # creating workflow
