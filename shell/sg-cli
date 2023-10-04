@@ -899,6 +899,57 @@ create_workflow() { #{{{ Create Workflow
       -H "Content-Type: application/json" \
       --data-raw "${workflow}" "${url}")
 
+    upload_tfstate() {
+      local org_id="$1"
+      local wfgrp_id="$2"
+      local wf_id="$3"
+      local tf_state_file_path="$4"
+
+      local url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
+      local response=$(curl -i -s --http1.1 -X GET \
+          -H 'PrincipalId: "cli"' \
+          -H "Authorization: apikey ${API_TOKEN}" \
+          -H "Content-Type: application/json" \
+          "${url_for_getting_signed_url}")
+
+      if ! parse_response "$response"; then
+          err_response "Unable to fetch signed url."
+          return 1
+      fi
+
+      local generate_signed_url="${response}"
+      local url=$(echo "${generate_signed_url}" | jq -r '.msg')
+
+      echo ">> Uploading state file to Stackguardian.."
+      local tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
+      mkdir -p "${tfstate_path}"
+
+      if [ -f "$tf_state_file_path" ]; then
+          cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
+      else
+          warn "TfStateFilePath is not a file or does not exist"
+          return 1
+      fi
+
+      response=$(curl -i -s -X PUT \
+          -H "Accept: application/json, text/plain, */*" \
+          -H "Content-Type: application/json" \
+          -H "ContentType: application/json" \
+          -T "${tfstate_path}/tfstate.json" \
+          "${url}")
+
+      if ! parse_response "$response"; then
+          err_response "Upload failed."
+          echo "$full_response"
+          return 1
+      else
+          echo "Upload completed."
+          rm -r "$tfstate_path"
+          echo ">> Initiating Workflow.."
+          # Additional logic for initiating the workflow can be added here.
+      fi    
+    }
+
       if parse_response; then
         echo "Workflow created."
         # getting information about state file
@@ -909,44 +960,7 @@ create_workflow() { #{{{ Create Workflow
           echo ">> Skipping update of state file.."
         else
           echo ">> Updating the workflow..."
-          url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
-          response=$(curl -i -s --http1.1 -X GET \
-          -H 'PrincipalId: "cli"' \
-          -H "Authorization: apikey ${API_TOKEN}" \
-          -H "Content-Type: application/json" \
-          "${url_for_getting_signed_url}")
-          if ! parse_response; then
-            err_response "Unable to fetch signed url."
-            continue
-          fi
-
-          # fetching upload url
-          generate_signed_url="${response}"
-          url="$(echo "${generate_signed_url}" | jq -r '.msg')"
-          echo ">> Uploading state file to Stackguardian.."
-          tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
-          mkdir -p "${tfstate_path}"
-          if [ -f "$tf_state_file_path" ]; then
-            cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
-          else
-            warn "TfStateFilePath is not a file or does not exist"
-            continue
-          fi
-          response=$(curl -i -s -X PUT \
-            -H "Accept: application/json, text/plain, */*" \
-            -H "Content-Type: application/json" \
-            -H "ContentType: application/json" \
-            -T "${tfstate_path}/tfstate.json" \
-            "${url}")
-          if ! parse_response; then
-            err_response "Upload failed."
-            echo "$full_response"
-            continue
-          else
-            echo "Upload completed."
-            rm -r "$tfstate_path"
-            echo ">> Initiating Worfklow.."
-          fi
+          upload_tfstate "$org_id" "$wfgrp_id" "$wf_id" "$tf_state_file_path"
 
           # trying to execute workflow after update
           if [ "${run_on_create}" = "true" ]; then
@@ -985,44 +999,7 @@ create_workflow() { #{{{ Create Workflow
             echo ">> Skipping update of state file.."
           else
             echo ">> Updating the workflow..."
-            url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
-            response=$(curl -i -s --http1.1 -X GET \
-            -H 'PrincipalId: "cli"' \
-            -H "Authorization: apikey ${API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            "${url_for_getting_signed_url}")
-            if ! parse_response; then
-              err_response "Unable to fetch signed url."
-              continue
-            fi
-
-            # fetching upload url
-            generate_signed_url="${response}"
-            url="$(echo "${generate_signed_url}" | jq -r '.msg')"
-            echo ">> Uploading state file to Stackguardian.."
-            tfstate_path="./${org_id}/${wfgrp_id}/${wf_id}"
-            mkdir -p "${tfstate_path}"
-            if [ -f "$tf_state_file_path" ]; then
-              cp "${tf_state_file_path}" "${tfstate_path}/tfstate.json"
-            else
-              warn "TfStateFilePath is not a file or does not exist"
-              continue
-            fi
-            response=$(curl -i -s -X PUT \
-              -H "Accept: application/json, text/plain, */*" \
-              -H "Content-Type: application/json" \
-              -H "ContentType: application/json" \
-              -T "${tfstate_path}/tfstate.json" \
-              "${url}")
-            if ! parse_response; then
-              err_response "Upload failed."
-              echo "$full_response"
-              continue
-            else
-              echo "Upload completed."
-              rm -r "$tfstate_path"
-              echo ">> Initiating Worfklow.."
-            fi
+            upload_tfstate "$org_id" "$wfgrp_id" "$wf_id" "$tf_state_file_path"
           fi
         fi
         continue
