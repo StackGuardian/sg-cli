@@ -872,6 +872,7 @@ create_workflow() { #{{{ Create Workflow
       fi
       
       counter=$(( counter+1 ))
+      
       wf_id="$(echo "${workflow}" | jq -r '.ResourceName')"
 
       if ! exists_or_notnull \
@@ -880,12 +881,8 @@ create_workflow() { #{{{ Create Workflow
         continue
       fi
 
-      ! exists_or_notnull \
-          "wfgrp_id" \
-          "" && \
-        wfgrp_id="$(echo "${workflow}" \
+      wfgrp_id="$(echo "${workflow}" \
           | jq -r '.CLIConfiguration.WorkflowGroup.name')"
-      
 
       ! exists_or_notnull \
           "wfgrp_id" \
