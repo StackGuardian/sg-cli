@@ -454,7 +454,7 @@ EOF
 get_stack() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -485,7 +485,7 @@ get_stackrun_status() { #{{{
 get_wfruns_in_stackrun() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}${stack_run_id}"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -496,7 +496,7 @@ get_wfruns_in_stackrun() { #{{{
 get_workflow() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns/${wf_run_id}"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -517,7 +517,7 @@ get_workflow_status() { #{{{
 get_workflow_outputs() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/outputs"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -547,7 +547,7 @@ create_stack() { #{{{ Create Stack
   runOnCreate=${run_on_create:-false}
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/?runOnCreate=$runOnCreate"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     --data-raw "${payload}" "${url}")
@@ -575,7 +575,7 @@ delete_stack() { #{{{ Delete Stack
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}"
   response=$(curl -i -s --http1.1 -X DELETE \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -604,7 +604,7 @@ apply_stack() { #{{{ Apply Stack
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns/"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{"ActionType": "apply"}' "${url}")
@@ -632,7 +632,7 @@ destroy_stack() { #{{{ Destroy Stack
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/stackruns"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     --data-raw '{"ActionType": "destroy"}' "${url}")
@@ -644,7 +644,7 @@ destroy_stack() { #{{{ Destroy Stack
 # create_workflow_in_stack() { #{{{
 #     url="${API_URL}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/"
 #     response=$(curl -i -s --http1.1 -X POST \
-#       -H 'PrincipalId: ""' \
+#       -H 'PrincipalId: "cli"' \
 #       -H "Authorization: apikey ${API_TOKEN}" \
 #       -H "Content-Type: application/json" \
 #       --data-raw "${payload}" "${url}")
@@ -662,7 +662,7 @@ destroy_stack() { #{{{ Destroy Stack
 # list_workflows_inside_stack() { #{{{
 #     url="${API_URL}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/listall/"
 #     response=$(curl -i -s --http1.1 -X GET \
-#       -H 'PrincipalId: ""' \
+#       -H 'PrincipalId: "cli"' \
 #       -H "Authorization: apikey ${API_TOKEN}" \
 #       -H "Content-Type: application/json" \
 #       "${url}")
@@ -679,7 +679,7 @@ destroy_stack() { #{{{ Destroy Stack
 # read_workflow_in_stack() { #{{{
 #     url="${API_URL}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/${wf_id}"
 #     response=$(curl -i -s --http1.1 -X GET \
-#       -H 'PrincipalId: ""' \
+#       -H 'PrincipalId: "cli"' \
 #       -H "Authorization: apikey ${API_TOKEN}" \
 #       -H "Content-Type: application/json" \
 #       "${url}")
@@ -696,7 +696,7 @@ destroy_stack() { #{{{ Destroy Stack
 # delete_workflow_in_stack() { #{{{
 #     url="${API_URL}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/${wf_id}"
 #     response=$(curl -i -s --http1.1 -X DELETE \
-#       -H 'PrincipalId: ""' \
+#       -H 'PrincipalId: "cli"' \
 #       -H "Authorization: apikey ${API_TOKEN}" \
 #       -H "Content-Type: application/json" \
 #       "${url}")
@@ -713,7 +713,7 @@ destroy_stack() { #{{{ Destroy Stack
 # listall_artifacts_in_stack() { #{{{
 #     url="${API_URL}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/${wf_id}/listall_artifacts"
 #     response=$(curl -i -s --http1.1 -X GET \
-#       -H 'PrincipalId: ""' \
+#       -H 'PrincipalId: "cli"' \
 #       -H "Authorization: apikey ${API_TOKEN}" \
 #       -H "Content-Type: application/json" \
 #       "${url}")
@@ -730,7 +730,7 @@ destroy_stack() { #{{{ Destroy Stack
 # get_workflow_outputs_in_stack() { #{{{
 #     url="${API_URL}/orgs/${org_id}/wfgrps/{wfgrp_id}/stacks/{stack_id}/wfs/${wf_id}/outputs"
 #     response=$(curl -i -s --http1.1 -X GET \
-#       -H 'PrincipalId: ""' \
+#       -H 'PrincipalId: "cli"' \
 #       -H "Authorization: apikey ${API_TOKEN}" \
 #       -H "Content-Type: application/json" \
 #       "${url}")
@@ -766,7 +766,7 @@ outputs_stack() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/stacks/${stack_id}/outputs/"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -784,7 +784,7 @@ aws_compliance() {
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_${region}/wfruns/"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     --data-raw "${payload}" "${url}")
@@ -800,7 +800,7 @@ azure_compliance() {
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/__SG_OWNED__/wfs/${integration_name}_all/wfruns/"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     --data-raw "${payload}" "${url}")
@@ -871,8 +871,9 @@ create_workflow() { #{{{ Create Workflow
         continue
       fi
       
-      workflow_id=$(echo "${payload}" | jq -r ".[$counter].ResourceName")
-      wf_id="${workflow_id}"
+      counter=$(( counter+1 ))
+      wf_id="$(echo "${workflow}" | jq -r '.ResourceName')"
+
       if ! exists_or_notnull \
             "wf_id" \
             "Workflow ResourceName is required in object payload"; then
@@ -882,31 +883,21 @@ create_workflow() { #{{{ Create Workflow
       ! exists_or_notnull \
           "wfgrp_id" \
           "" && \
-        workflow_name=$(echo "${payload}" | jq -r ".[$counter].CLIConfiguration.WorkflowGroup.name")
-        wfgrp_id="${workflow_name}"
+        wfgrp_id="$(echo "${workflow}" \
+          | jq -r '.CLIConfiguration.WorkflowGroup.name')"
       
 
       ! exists_or_notnull \
           "wfgrp_id" \
           "Workflow Group is required. (Use --workflow-group or CLIConfiguration in payload)" && \
         continue
-      
-      function build_url {
-        local org_id="$1"
-        local wfgrp_id="$2"
-        local url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
-        echo "$url"
-      }
 
-      temp_url=$(build_url "$org_id" "$wfgrp_id")
-      url="${temp_url}"
-
-      counter=$(( counter+1 ))
+      url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
       # creating workflow
       echo
       echo ">> Processing workflow: $wf_id"
       response=$(curl -i -s --http1.1 -X POST \
-      -H 'PrincipalId: ""' \
+      -H 'PrincipalId: "cli"' \
       -H "Authorization: apikey ${API_TOKEN}" \
       -H "Content-Type: application/json" \
       --data-raw "${workflow}" "${url}")
@@ -923,7 +914,7 @@ create_workflow() { #{{{ Create Workflow
           echo ">> Updating the workflow..."
           url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
           response=$(curl -i -s --http1.1 -X GET \
-          -H 'PrincipalId: ""' \
+          -H 'PrincipalId: "cli"' \
           -H "Authorization: apikey ${API_TOKEN}" \
           -H "Content-Type: application/json" \
           "${url_for_getting_signed_url}")
@@ -964,7 +955,7 @@ create_workflow() { #{{{ Create Workflow
           if [ "${run_on_create}" = "true" ]; then
             url_to_dispatch="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
             response=$(curl -i -s --http1.1 -X POST \
-            -H 'PrincipalId: ""' \
+            -H 'PrincipalId: "cli"' \
             -H "Authorization: apikey ${API_TOKEN}" \
             -H "Content-Type: application/json" \
             --data-raw "$(echo "${workflow}" | jq ".TerraformConfig.approvalPreApply = true")" \
@@ -981,7 +972,7 @@ create_workflow() { #{{{ Create Workflow
         echo "Workflow already exists, updating instead..."
         url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
         response=$(curl -i -s --http1.1 -X PATCH \
-          -H 'PrincipalId: ""' \
+          -H 'PrincipalId: "cli"' \
           -H "Authorization: apikey ${API_TOKEN}" \
           -H "Content-Type: application/json" \
           --data-raw "${workflow}" "${url}")
@@ -999,7 +990,7 @@ create_workflow() { #{{{ Create Workflow
             echo ">> Updating the workflow..."
             url_for_getting_signed_url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/tfstate_upload_url"
             response=$(curl -i -s --http1.1 -X GET \
-            -H 'PrincipalId: ""' \
+            -H 'PrincipalId: "cli"' \
             -H "Authorization: apikey ${API_TOKEN}" \
             -H "Content-Type: application/json" \
             "${url_for_getting_signed_url}")
@@ -1046,7 +1037,7 @@ create_workflow() { #{{{ Create Workflow
     [ -e "$org_id" ] && [ -d "$org_id" ] && rm -r "$org_id"
   else
     response=$(curl -i -s --http1.1 -X POST \
-      -H 'PrincipalId: ""' \
+      -H 'PrincipalId: "cli"' \
       -H "Authorization: apikey ${API_TOKEN}" \
       -H "Content-Type: application/json" \
       --data-raw "${payload}" "${url}")
@@ -1074,7 +1065,7 @@ list_workflow() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/listall/"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -1101,7 +1092,7 @@ run_workflow() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfruns"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" "${url}")
   check_response_status "Failed To Execute Workflow"
@@ -1128,7 +1119,7 @@ apply_workflow() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     -d '{"ActionType": "apply"}' "${url}")
@@ -1156,7 +1147,7 @@ destroy_workflow() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns"
   response=$(curl -i -s --http1.1 -X POST \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     --data-raw '{"ActionType": "destroy"}' "${url}")
@@ -1184,7 +1175,7 @@ read_workflow() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -1212,7 +1203,7 @@ delete_workflow() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}"
   response=$(curl -i -s --http1.1 -X DELETE \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -1240,7 +1231,7 @@ list_artifacts() { #{{{
   fi
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/listall_artifacts"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
@@ -1275,7 +1266,7 @@ integrate_aws() { #{{{
     object_payload=$(echo "${payload}" | jq ".[][$i]")
     url="${API_URL}/orgs/${org_id}/integrations"
     response=$(curl -i -s --http1.1 -X POST \
-      -H 'PrincipalId: ""' \
+      -H 'PrincipalId: "cli"' \
       -H "Authorization: apikey ${API_TOKEN}" \
       -H "Content-Type: application/json" \
       --data-raw "${object_payload}" "${url}")
@@ -1295,7 +1286,7 @@ integrate_aws() { #{{{
 get_workflow_outputs() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/outputs"
   response=$(curl -i -s --http1.1 -X GET \
-    -H 'PrincipalId: ""' \
+    -H 'PrincipalId: "cli"' \
     -H "Authorization: apikey ${API_TOKEN}" \
     -H "Content-Type: application/json" \
     "${url}")
