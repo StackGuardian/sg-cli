@@ -149,36 +149,46 @@ Payload will look like the following for integrating AWS accounts:
 > It should contain an array of AWS account objects under the key `awsAccounts`
 ```
 {
-  "awsAccounts": [
-    {
-      "ResourceName": "Dummy123",
-      "Description": "dummy account",
-      "Settings": {
-        "kind": "AWS_STATIC",
-        "config": [
-          {
-            "awsAccessKeyId": "hi-its-me-a-dummy-account",
-            "awsSecretAccessKey": "keep-your-secrets-safe",
-            "awsDefaultRegion": "us-east-1"
-          }
-        ]
-      }
-    },
-    {
-      "ResourceName": "Dummy11345",
-      "Description": "dummy account",
-      "Settings": {
-        "kind": "AWS_STATIC",
-        "config": [
-          {
-            "awsAccessKeyId": "hi-its-me-a-dummy-account",
-            "awsSecretAccessKey": "keep-your-secrets-safe",
-            "awsDefaultRegion": "us-east-1"
-          }
-        ]
-      }
-    }
-  ]
+    "awsAccounts": [
+        {
+            "ResourceName": "AWS-STATIC-101",
+            "Description": "Dummy AWS Account integration using Access Key.",
+            "Settings": {
+                "kind": "AWS_STATIC",
+                "config": [
+                    {
+                        "awsAccessKeyId": "dummy-accesskey-id",
+                        "awsSecretAccessKey":"keep-your-secret-safe",
+                        "awsDefaultRegion":"us-east-1"
+                    }
+                ]
+            },
+            "Tags": [
+                "aws",
+                "sg-cli",
+                "STATIC"
+            ]
+        },
+        {
+            "ResourceName": "AWS-RBAC-101",
+            "Description": "Dummy AWS Account integration using RBAC.",
+            "Settings": {
+                "kind": "AWS_RBAC",
+                "config": [
+                    {
+                        "externalId": "demo-org:1234567890",
+                        "durationSeconds":"3600",
+                        "roleArn":"arn:aws:iam::account-id:role/role-name"
+                    }
+                ]
+            },
+            "Tags": [
+                "aws",
+                "sg-cli",
+                "RBAC"
+            ]
+        }
+    ]
 }
 ```
 
