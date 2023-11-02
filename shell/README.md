@@ -139,7 +139,8 @@ Payload will look like the follwing:
 
 Example 6: Bulk onboard cloud accounts
 
-Integrating AWS Accounts
+Integrating AWS Accounts:
+
 ```
 ./sg-cli aws integrate --org demo-org  -- payload.json
 ```
@@ -181,13 +182,14 @@ Payload will look like the following for integrating AWS accounts:
 }
 ```
 
-Integrating Azure Subscriptions
+Integrating Azure Subscriptions:
+
 ```
 ./sg-cli azure integrate --org demo-org  -- payload.json
 ```
 
 Payload will look like the following for integrating Azure Subscriptions:
-> It should contain an array of AWS account objects under the key `azureSubscription`
+> It should contain an array of Azure subscriptions objects under the key `azureSubscription`
 ```
 {
     "azureSubscription": [
