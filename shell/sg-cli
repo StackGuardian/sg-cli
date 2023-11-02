@@ -1269,10 +1269,10 @@ integrate_azure() { #{{{
     exit 1
   fi
 
-  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("azureAccounts") then .azureAccounts else empty end | length')"
+  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("azureSubscription") then .azureSubscription else empty end | length')"
   ! exists_or_notnull \
     "array_length" \
-    "Invalid payload. \`azureAccounts\` key missing in global object." && \
+    "Invalid payload. \`azureSubscription\` key missing in global object." && \
     exit 1
 
   i=0

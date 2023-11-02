@@ -138,11 +138,13 @@ Payload will look like the follwing:
 ```
 
 Example 6: Bulk onboard cloud accounts
+
+Integrating AWS Accounts
 ```
 ./sg-cli aws integrate --org demo-org  -- payload.json
 ```
 
-Payload will look like the follwing:
+Payload will look like the following for integrating AWS accounts:
 > It should contain an array of AWS account objects under the key `awsAccounts`
 ```
 {
@@ -176,6 +178,60 @@ Payload will look like the follwing:
       }
     }
   ]
+}
+```
+
+Integrating Azure Subscriptions
+```
+./sg-cli azure integrate --org demo-org  -- payload.json
+```
+
+Payload will look like the following for integrating Azure Subscriptions:
+> It should contain an array of AWS account objects under the key `azureSubscription`
+```
+{
+    "azureSubscription": [
+        {
+            "ResourceName": "AZURE-DUMMY-101",
+            "Description": "Dummy Azure Account 101.",
+            "Settings": {
+                "kind": "AZURE_STATIC",
+                "config": [
+                    {
+                        "armClientSecret": "dummy-client-secret101",
+                        "armClientId":"dummy-client-id101",
+                        "armSubscriptionId":"dummy-subscription-id101",
+                        "armTenantId": "dummy-tenant-id101"
+                    }
+                ]
+            },
+            "Tags": [
+                "azure",
+                "sg-cli",
+                "integration"
+            ]
+        },
+        {
+            "ResourceName": "AZURE-DUMMY-102",
+            "Description": "Dummy Azure Account 102.",
+            "Settings": {
+                "kind": "AZURE_STATIC",
+                "config": [
+                    {
+                        "armClientSecret": "dummy-client-secret102",
+                        "armClientId":"dummy-client-id102",
+                        "armSubscriptionId":"dummy-subscription-id102",
+                        "armTenantId": "dummy-tenant-id102"
+                    }
+                ]
+            },
+            "Tags": [
+                "azure",
+                "sg-cli",
+                "integration"
+            ]
+        }
+    ]
 }
 ```
 
