@@ -119,8 +119,8 @@ Available commands:
   stack               Manage stack resources
   workflow            Manage workflow resources
   artifacts           Manage artifacts
-  aws                 Manage aws integration
-  azure               Manage azure integration  
+  cloud               Manage cloud provider integration
+  vcs                 Manage vcs provider integration  
 
 Usage:
   ./$(basename "$0") [options] -- [payload]
@@ -320,14 +320,36 @@ cloud_help() { #{{{
 Configure Cloud integration for Stackguardian platform.
 
 Examples:
-  [Integrate AWS Account]
-    ./$(basename "$0") aws integrate --org demo-org -- payload.json
-  
-  [Integrate Azure Subscription]  
-    ./$(basename "$0") azure integrate --org demo-org -- payload.json
+  [Integrate Cloud Accounts]
+    ./$(basename "$0") cloud integrate --org demo-org -- payload.json
 
 Sub-commands:
   integrate   Create Cloud integration
+
+Options:
+  --org '': (required)
+    The organization name on Stackguardian platform for which integration is created.
+
+Usage:
+  ./$(basename "$0") aws <sub-command> --org org-name -- payload
+
+Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
+EOF
+}
+#}}}
+
+vcs_help() { #{{{
+  cat <<EOF
+
+Configure Cloud integration for Stackguardian platform.
+
+Examples:
+  
+  [Integrate vcs Providers]  
+    ./$(basename "$0") vcs integrate --org demo-org -- payload.json
+
+Sub-commands:
+  integrate   Create VCS integration
 
 Options:
   --org '': (required)
@@ -2015,7 +2037,11 @@ case "$1" in
         shift 2
         ;;
       help | --help | -h)
-          cloud_help
+      if [ "$service" = "cloud" ]; then
+        cloud_help
+      elif [ "$service" = "vcs" ]; then
+        vcs_help
+      fi
         exit 0
         ;;
       *)
