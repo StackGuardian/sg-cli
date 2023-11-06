@@ -1219,7 +1219,7 @@ list_artifacts() { #{{{
 #}}}
 
 #######################################
-# AWS Integrate
+# Cloud / VCS Integrate
 # Arguments:
 #   org_id
 #   payload
@@ -1227,17 +1227,18 @@ list_artifacts() { #{{{
 #   Write to STDIN/STDERR
 #   if successfull/error.
 #######################################
-integrate_aws() { #{{{
+
+integrate_cloud() { #{{{
   return_response=
   if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
     err "Parameters --org and payload must be provided"
     exit 1
   fi
 
-  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("awsAccounts") then .awsAccounts else empty end | length')"
+  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("cloudProvider") then .cloudProvider else empty end | length')"
   ! exists_or_notnull \
     "array_length" \
-    "Invalid payload. \`awsAccounts\` key missing in global object." && \
+    "Invalid payload. \`cloudProvider\` key missing in global object." && \
     exit 1
 
   i=0
@@ -1262,17 +1263,17 @@ integrate_aws() { #{{{
 }
 #}}}
 
-integrate_azure() { #{{{
+integrate_vcs() {
   return_response=
   if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
     err "Parameters --org and payload must be provided"
     exit 1
   fi
 
-  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("azureSubscription") then .azureSubscription else empty end | length')"
+  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("vcsProvider") then .vcsProvider else empty end | length')"
   ! exists_or_notnull \
     "array_length" \
-    "Invalid payload. \`azureSubscription\` key missing in global object." && \
+    "Invalid payload. \`vcsProvider\` key missing in global object." && \
     exit 1
 
   i=0
@@ -1293,8 +1294,9 @@ integrate_azure() { #{{{
       warn_reponse "Failed to create integration: $(echo "$object_payload" | jq -r '.ResourceName')"
     fi
     i=$(( $i + 1 ))
-  done
+  done  
 }
+
 
 get_workflow_outputs() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/outputs"
@@ -1805,14 +1807,11 @@ list_artifacts_parse_response() { #{{{
 }
 #}}}
 
-integrate_aws_parse_response() { #{{{
-  # echo "${response}" | jq
+integrate_vcs_parse_response() {
   exit 0
 }
-#}}}
 
-integrate_azure_parse_response() { #{{{
-  # echo "${response}" | jq
+integrate_cloud_parse_response() {
   exit 0
 }
 
@@ -2008,7 +2007,7 @@ case "$1" in
         exit 1
     esac
     ;;
-  azure|aws)
+  vcs|cloud)
     service="$1"
     case "$2" in
       integrate)

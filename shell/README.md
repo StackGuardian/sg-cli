@@ -127,7 +127,7 @@ Example 5: (add new key)
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"custom_key": "custom_value"}' -- payload.json
 ```
-Payload will look like the follwing:
+Payload will look like the following:
 > new key/value will be added to payload
 ```
 {
@@ -137,19 +137,19 @@ Payload will look like the follwing:
 }
 ```
 
-Example 6: Bulk onboard cloud accounts
+Example 6: Bulk onboard Cloud accounts
 
-Integrating AWS Accounts:
+Integrating Cloud Accounts:
 
 ```
-./sg-cli aws integrate --org demo-org  -- payload.json
+./sg-cli cloud integrate --org demo-org  -- payload.json
 ```
 
-Payload will look like the following for integrating AWS accounts:
-> It should contain an array of AWS account objects under the key `awsAccounts`
+Payload will look like the following for integrating accounts:
+> It should contain an array of account objects under the key `cloudProvider`
 ```
 {
-    "awsAccounts": [
+    "cloudProvider": [
         {
             "ResourceName": "AWS-STATIC-101",
             "Description": "Dummy AWS Account integration using Access Key.",
@@ -187,22 +187,42 @@ Payload will look like the following for integrating AWS accounts:
                 "sg-cli",
                 "RBAC"
             ]
+        },
+        {
+            "ResourceName": "AZURE-DUMMY-101",
+            "Description": "Dummy Azure Account.",
+            "Settings": {
+                "kind": "AZURE_STATIC",
+                "config": [
+                    {
+                        "armClientSecret": "SECRET-101",
+                        "armClientId":"cscsdcsdcsdcscs101",
+                        "armSubscriptionId":"sdcscdscsdc101",
+                        "armTenantId": "cscsdcsdcsdcscs101"
+                    }
+                ]
+            },
+            "Tags": [
+                "azure",
+                "sg-cli",
+                "integration"
+            ]
         }
     ]
 }
 ```
 
-Integrating Azure Subscriptions:
+Integrating VCS Provider:
 
 ```
-./sg-cli azure integrate --org demo-org  -- payload.json
+./sg-cli vcs integrate --org demo-org  -- payload.json
 ```
 
-Payload will look like the following for integrating Azure Subscriptions:
-> It should contain an array of Azure subscriptions objects under the key `azureSubscription`
+Payload will look like the following for integrating VCS Provider:
+> It should contain an array of Azure subscriptions objects under the key `vcsProvider`
 ```
 {
-    "azureSubscription": [
+    "vcsProvider": [
         {
             "ResourceName": "AZURE-DUMMY-101",
             "Description": "Dummy Azure Account 101.",
