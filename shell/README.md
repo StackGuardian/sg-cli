@@ -127,7 +127,7 @@ Example 5: (add new key)
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"custom_key": "custom_value"}' -- payload.json
 ```
-Payload will look like the follwing:
+Payload will look like the following:
 > new key/value will be added to payload
 ```
 {
@@ -137,45 +137,111 @@ Payload will look like the follwing:
 }
 ```
 
-Example 6: Bulk onboard cloud accounts
+Example 6: Bulk onboard Cloud/VCS accounts
+
+Integrating Cloud/VCS Accounts:
+
 ```
-./sg-cli aws integrate --org demo-org  -- payload.json
+./sg-cli integrations create --org org-name  -- payload.json
 ```
 
-Payload will look like the follwing:
-> It should contain an array of AWS account objects under the key `awsAccounts`
+Payload will look like the following for integrating accounts:
+> It should contain an array of account objects under the key `Integrations`
 ```
 {
-  "awsAccounts": [
-    {
-      "ResourceName": "Dummy123",
-      "Description": "dummy account",
-      "Settings": {
-        "kind": "AWS_STATIC",
-        "config": [
-          {
-            "awsAccessKeyId": "hi-its-me-a-dummy-account",
-            "awsSecretAccessKey": "keep-your-secrets-safe",
-            "awsDefaultRegion": "us-east-1"
-          }
-        ]
-      }
-    },
-    {
-      "ResourceName": "Dummy11345",
-      "Description": "dummy account",
-      "Settings": {
-        "kind": "AWS_STATIC",
-        "config": [
-          {
-            "awsAccessKeyId": "hi-its-me-a-dummy-account",
-            "awsSecretAccessKey": "keep-your-secrets-safe",
-            "awsDefaultRegion": "us-east-1"
-          }
-        ]
-      }
-    }
-  ]
+    "Integrations": [
+        {
+            "ResourceName": "gitlab-sgcli",
+            "Settings": {
+                "kind": "GITLAB_COM",
+                "config": [
+                    {
+                        "gitlabCreds": "secretUsername:secretAccessToken"
+                    }
+                ]
+            }
+        },
+        {
+            "ResourceName": "azuredevops-sgcli",
+            "Settings": {
+                "kind": "AZURE_DEVOPS",
+                "config": [
+                    {
+                        "azureCreds": "personalAccessToken"
+                    }
+                ]
+            }
+        },
+        {
+            "ResourceName": "bitbucket-sgcli",
+            "Settings": {
+                "kind": "BITBUCKET_ORG",
+                "config": [
+                    {
+                        "bitbucketCreds": "userName:appPassword"
+                    }
+                ]
+            }
+        },
+        {
+            "ResourceName": "AWS-STATIC-101",
+            "Description": "Dummy AWS Account integration using Access Key.",
+            "Settings": {
+                "kind": "AWS_STATIC",
+                "config": [
+                    {
+                        "awsAccessKeyId": "dummy-accesskey-id",
+                        "awsSecretAccessKey":"keep-your-secret-safe",
+                        "awsDefaultRegion":"us-east-1"
+                    }
+                ]
+            },
+            "Tags": [
+                "aws",
+                "sg-cli",
+                "STATIC"
+            ]
+        },
+        {
+            "ResourceName": "AWS-RBAC-101",
+            "Description": "Dummy AWS Account integration using RBAC.",
+            "Settings": {
+                "kind": "AWS_RBAC",
+                "config": [
+                    {
+                        "externalId": "demo-org:1234567890",
+                        "durationSeconds":"3600",
+                        "roleArn":"arn:aws:iam::account-id:role/role-name"
+                    }
+                ]
+            },
+            "Tags": [
+                "aws",
+                "sg-cli",
+                "RBAC"
+            ]
+        },
+        {
+            "ResourceName": "AZURE-DUMMY-101",
+            "Description": "Dummy Azure Account.",
+            "Settings": {
+                "kind": "AZURE_STATIC",
+                "config": [
+                    {
+                        "armClientSecret": "SECRET-101",
+                        "armClientId":"cscsdcsdcsdcscs101",
+                        "armSubscriptionId":"sdcscdscsdc101",
+                        "armTenantId": "cscsdcsdcsdcscs101"
+                    }
+                ]
+            },
+            "Tags": [
+                "azure",
+                "sg-cli",
+                "integration"
+            ]
+        }      
+    ]
 }
 ```
 
