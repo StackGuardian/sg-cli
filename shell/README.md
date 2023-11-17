@@ -137,19 +137,52 @@ Payload will look like the following:
 }
 ```
 
-Example 6: Bulk onboard Cloud accounts
+Example 6: Bulk onboard Cloud/VCS accounts
 
-Integrating Cloud Accounts:
+Integrating Cloud/VCS Accounts:
 
 ```
-./sg-cli cloud integrate --org demo-org  -- payload.json
+./sg-cli integrations create --org org-name  -- payload.json
 ```
 
 Payload will look like the following for integrating accounts:
-> It should contain an array of account objects under the key `cloudProvider`
+> It should contain an array of account objects under the key `Integrations`
 ```
 {
-    "cloudProvider": [
+    "Integrations": [
+        {
+            "ResourceName": "gitlab-sgcli",
+            "Settings": {
+                "kind": "GITLAB_COM",
+                "config": [
+                    {
+                        "gitlabCreds": "secretUsername:secretAccessToken"
+                    }
+                ]
+            }
+        },
+        {
+            "ResourceName": "azuredevops-sgcli",
+            "Settings": {
+                "kind": "AZURE_DEVOPS",
+                "config": [
+                    {
+                        "azureCreds": "personalAccessToken"
+                    }
+                ]
+            }
+        },
+        {
+            "ResourceName": "bitbucket-sgcli",
+            "Settings": {
+                "kind": "BITBUCKET_ORG",
+                "config": [
+                    {
+                        "bitbucketCreds": "userName:appPassword"
+                    }
+                ]
+            }
+        },
         {
             "ResourceName": "AWS-STATIC-101",
             "Description": "Dummy AWS Account integration using Access Key.",
@@ -207,62 +240,7 @@ Payload will look like the following for integrating accounts:
                 "sg-cli",
                 "integration"
             ]
-        }
-    ]
-}
-```
-
-Integrating VCS Provider:
-
-```
-./sg-cli vcs integrate --org demo-org  -- payload.json
-```
-
-Payload will look like the following for integrating VCS Provider:
-> It should contain an array of Azure subscriptions objects under the key `vcsProvider`
-```
-{
-    "vcsProvider": [
-        {
-            "ResourceName": "AZURE-DUMMY-101",
-            "Description": "Dummy Azure Account 101.",
-            "Settings": {
-                "kind": "AZURE_STATIC",
-                "config": [
-                    {
-                        "armClientSecret": "dummy-client-secret101",
-                        "armClientId":"dummy-client-id101",
-                        "armSubscriptionId":"dummy-subscription-id101",
-                        "armTenantId": "dummy-tenant-id101"
-                    }
-                ]
-            },
-            "Tags": [
-                "azure",
-                "sg-cli",
-                "integration"
-            ]
-        },
-        {
-            "ResourceName": "AZURE-DUMMY-102",
-            "Description": "Dummy Azure Account 102.",
-            "Settings": {
-                "kind": "AZURE_STATIC",
-                "config": [
-                    {
-                        "armClientSecret": "dummy-client-secret102",
-                        "armClientId":"dummy-client-id102",
-                        "armSubscriptionId":"dummy-subscription-id102",
-                        "armTenantId": "dummy-tenant-id102"
-                    }
-                ]
-            },
-            "Tags": [
-                "azure",
-                "sg-cli",
-                "integration"
-            ]
-        }
+        }      
     ]
 }
 ```
