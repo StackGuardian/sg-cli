@@ -119,8 +119,7 @@ Available commands:
   stack               Manage stack resources
   workflow            Manage workflow resources
   artifacts           Manage artifacts
-  cloud               Manage cloud provider integration
-  vcs                 Manage vcs provider integration  
+  integrations        Manage cloud/vcs provider integration  
 
 Usage:
   ./$(basename "$0") [options] -- [payload]
@@ -314,49 +313,24 @@ EOF
 }
 #}}}
 
-cloud_help() { #{{{
+integrations_help() { #{{{
   cat <<EOF
 
 Configure Cloud integration for Stackguardian platform.
 
 Examples:
   [Integrate Cloud Accounts]
-    ./$(basename "$0") cloud integrate --org demo-org -- payload.json
+    ./$(basename "$0") integrations create --org org-name -- payload.json
 
 Sub-commands:
-  integrate   Create Cloud integration
+  create   Create Cloud/VCS integration
 
 Options:
   --org '': (required)
     The organization name on Stackguardian platform for which integration is created.
 
 Usage:
-  ./$(basename "$0") aws <sub-command> --org org-name -- payload
-
-Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
-EOF
-}
-#}}}
-
-vcs_help() { #{{{
-  cat <<EOF
-
-Configure Cloud integration for Stackguardian platform.
-
-Examples:
-  
-  [Integrate vcs Providers]  
-    ./$(basename "$0") vcs integrate --org demo-org -- payload.json
-
-Sub-commands:
-  integrate   Create VCS integration
-
-Options:
-  --org '': (required)
-    The organization name on Stackguardian platform for which integration is created.
-
-Usage:
-  ./$(basename "$0") aws <sub-command> --org org-name -- payload
+  ./$(basename "$0") integrations <sub-command> --org org-name -- payload
 
 Use "./$(basename "$0") options" for a list of global command-line options (appiles to all commands).
 EOF
@@ -388,6 +362,7 @@ parse_response() { #{{{
   # get first status code from response
   status_code="$(echo "$response" \
     | awk '/^HTTP/ {print $2; exit}')"
+  echo $status_code
 
   # actual response data
   response="$(echo "$response" \
@@ -1249,29 +1224,29 @@ list_artifacts() { #{{{
 #   Write to STDIN/STDERR
 #   if successfull/error.
 #######################################
-
-integrate_cloud() { #{{{
-  return_response=
+create_integrations() {
+    return_response=
   if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
     err "Parameters --org and payload must be provided"
     exit 1
   fi
 
-  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("cloudProvider") then .cloudProvider else empty end | length')"
+  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("Integrations") then .Integrations else empty end | length')"
   ! exists_or_notnull \
     "array_length" \
-    "Invalid payload. \`cloudProvider\` key missing in global object." && \
+    "Invalid payload. \`Integrations\` key missing in global object." && \
     exit 1
 
   i=0
   while [ ${i} -lt "${array_length}" ]; do
     object_payload=$(echo "${payload}" | jq ".[][$i]")
-    url="${API_URL}/orgs/${org_id}/integrations"
+    url="${API_URL}/orgs/${org_id}/integrations/"
     response=$(curl -i -s --http1.1 -X POST \
       -H 'PrincipalId: "cli"' \
       -H "Authorization: apikey ${API_TOKEN}" \
       -H "Content-Type: application/json" \
       --data-raw "${object_payload}" "${url}")
+    echo $response
     if parse_response; then
       exists_or_notnull \
         "response" && \
@@ -1283,42 +1258,6 @@ integrate_cloud() { #{{{
     i=$(( $i + 1 ))
   done
 }
-#}}}
-
-integrate_vcs() {
-  return_response=
-  if [ -z "${payload}" ] || [ -z "${org_id}" ]; then
-    err "Parameters --org and payload must be provided"
-    exit 1
-  fi
-
-  array_length="$(echo "${payload}" | jq 'if type == "object" then . else empty end | if has("vcsProvider") then .vcsProvider else empty end | length')"
-  ! exists_or_notnull \
-    "array_length" \
-    "Invalid payload. \`vcsProvider\` key missing in global object." && \
-    exit 1
-
-  i=0
-  while [ ${i} -lt "${array_length}" ]; do
-    object_payload=$(echo "${payload}" | jq ".[][$i]")
-    url="${API_URL}/orgs/${org_id}/integrations"
-    response=$(curl -i -s --http1.1 -X POST \
-      -H 'PrincipalId: "cli"' \
-      -H "Authorization: apikey ${API_TOKEN}" \
-      -H "Content-Type: application/json" \
-      --data-raw "${object_payload}" "${url}")
-    if parse_response; then
-      exists_or_notnull \
-        "response" && \
-      return_response="${return_response}\n${response}"
-      info "Created integration: $(echo "$object_payload" | jq -r '.ResourceName')"
-    else
-      warn_reponse "Failed to create integration: $(echo "$object_payload" | jq -r '.ResourceName')"
-    fi
-    i=$(( $i + 1 ))
-  done  
-}
-
 
 get_workflow_outputs() { #{{{
   url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/outputs"
@@ -1829,14 +1768,9 @@ list_artifacts_parse_response() { #{{{
 }
 #}}}
 
-integrate_vcs_parse_response() {
+create_integrations_parse_response() {
   exit 0
 }
-
-integrate_cloud_parse_response() {
-  exit 0
-}
-
 
 #######################################
 # Other support functions
@@ -2029,19 +1963,15 @@ case "$1" in
         exit 1
     esac
     ;;
-  vcs|cloud)
+  integrations)
     service="$1"
     case "$2" in
-      integrate)
+      create)
         service_option="$2"
         shift 2
         ;;
       help | --help | -h)
-      if [ "$service" = "cloud" ]; then
-        cloud_help
-      elif [ "$service" = "vcs" ]; then
-        vcs_help
-      fi
+      integrations_help
         exit 0
         ;;
       *)
