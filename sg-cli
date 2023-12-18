@@ -1010,6 +1010,7 @@ create_workflow() { #{{{ Create Workflow
     done
     [ -e "$org_id" ] && [ -d "$org_id" ] && rm -r "$org_id"
   else
+    url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
     response=$(curl -i -s --http1.1 -X POST \
       -H 'PrincipalId: "cli"' \
       -H "Authorization: apikey ${API_TOKEN}" \
