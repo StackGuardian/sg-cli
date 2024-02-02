@@ -23,6 +23,12 @@ if ! type jq >/dev/null 2>&1; then
   exit 2
 fi
 
+# check if curl command is installed
+if ! type curl >/dev/null 2>&1; then
+  err "curl command is required"
+  exit 2
+fi
+
 #{{{ Color Variables For `printf`
 readonly C_RED_BOLD="\033[1;31m"
 readonly C_RED="\033[0;31m"
