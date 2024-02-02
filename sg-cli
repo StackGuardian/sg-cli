@@ -11,6 +11,12 @@ readonly API_URL="${BASE_URL}/api/v1"
 readonly DASHBOARD_URL="${SG_DASHBOARD_URL:-"https://app.stackguardian.io/orchestrator"}"
 readonly API_TOKEN="${SG_API_TOKEN}"
 
+err() { #{{{
+  printf "%s ${C_RED_BOLD}[ERROR] ${C_RESET}%s" "$(log_date)" "$*" >&2
+  printf "\n\n(Try ${C_BOLD}%s --help${C_RESET} for more information.)\n" "$(basename "${0}")"
+}
+#}}}
+
 # check if jq command is installed
 if ! type jq >/dev/null 2>&1; then
   err "jq command is required"
@@ -47,12 +53,6 @@ log_date() { #{{{
 
 json_print() { #{{{
   echo "$*" | jq
-}
-#}}}
-
-err() { #{{{
-  printf "%s ${C_RED_BOLD}[ERROR] ${C_RESET}%s" "$(log_date)" "$*" >&2
-  printf "\n\n(Try ${C_BOLD}%s --help${C_RESET} for more information.)\n" "$(basename "${0}")"
 }
 #}}}
 
