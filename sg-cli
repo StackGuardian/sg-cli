@@ -1020,7 +1020,7 @@ create_workflow() { #{{{ Create Workflow
     if ! exists_or_notnull \
           "wf_id" \
           "Workflow ResourceName is required in object payload"; then
-      continue
+      exit 1
     fi
     if [ "${run_on_create}" = "true" ]; then
       url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns/"
