@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+# set -x
 
 ## Check Global Variables
 [ -f .env ] && . .env # if .env exists, source it
@@ -1016,8 +1016,13 @@ create_workflow() { #{{{ Create Workflow
     done
     [ -e "$org_id" ] && [ -d "$org_id" ] && rm -r "$org_id"
   else
+    wf_id="$(echo "${payload}" | jq -r '.ResourceName')"
+    if ! exists_or_notnull \
+          "wf_id" \
+          "Workflow ResourceName is required in object payload"; then
+      continue
+    fi
     if [ "${run_on_create}" = "true" ]; then
-      wf_id="$(echo "${payload}" | jq -r '.ResourceName')"
       url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}/wfruns/"
     else
       url="${API_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/"
@@ -1567,8 +1572,8 @@ create_workflow_parse_response() { #{{{
   if [ "${response}" != "" ] && [ -z "${bulk_create}" ]; then
     wf_id=${wf_id:-$(echo "${response}" | jq -r '.data.ResourceName')}
     # stack_run_id=$(echo "${response}" | jq -r '.data.stack.StackRunId')
-    echo "${DASHBOARD_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}?tab=runs/"
-    echo "Navigate to the dashboard."
+    echo "${DASHBOARD_URL}/orgs/${org_id}/wfgrps/${wfgrp_id}/wfs/${wf_id}?tab=runs"
+    echo "Navigate to the Workflow Runs."
     exit 0
   else
     exit 1
