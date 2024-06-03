@@ -59,6 +59,7 @@ If we have payload like following
         "ResourceName": "azure_aks-Wngq"
       }
     ]
+  }
 }
 ```
 
