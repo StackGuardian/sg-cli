@@ -69,11 +69,12 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 		Use:   "create",
 		Short: "Create new workflow",
 		Long:  `Create new workflow in the specified organization and workflow group.`,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			// Set the options from the command line flags
 			opts.Org = cmd.Parent().PersistentFlags().Lookup("org").Value.String()
 			opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
-			opts.Payload = cmd.Flags().Lookup("payload").Value.String()
+			opts.Payload = args[0]
 
 			DASHBOARD_URL := "https://app.stackguardian.io/orchestrator"
 
@@ -331,8 +332,6 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 	}
 
 	// Define the flags for the command
-	createCmd.Flags().StringVar(&opts.Payload, "payload", "", "The payload JSON file that defines the workflow.")
-	createCmd.MarkFlagRequired("payload")
 
 	createCmd.Flags().StringVar(&opts.PatchPayload, "patch-payload", "", "Patch original payload.json input. Add or replace values. Requires valid JSON input.")
 

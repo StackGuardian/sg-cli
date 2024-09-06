@@ -36,7 +36,7 @@ func NewDestroyCmd(c *client.Client) *cobra.Command {
 				opts.WfgGrp,
 				&sggosdk.WorkflowRun{
 					TerraformAction: &sggosdk.TerraformAction{
-						Action: sggosdk.ActionEnumDestroy.Ptr().Ptr(),
+						Action: sggosdk.ActionEnumDestroy.Ptr(),
 					},
 				},
 			)

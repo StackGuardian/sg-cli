@@ -31,10 +31,11 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 		Use:   "create",
 		Short: "Create new stack",
 		Long:  `Create new stack in the specified organization and workflow group.`,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			opts.Org = cmd.Parent().PersistentFlags().Lookup("org").Value.String()
 			opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
-			opts.Payload = cmd.Flags().Lookup("payload").Value.String()
+			opts.Payload = args[0]
 
 			payload, err := os.ReadFile(opts.Payload)
 			if err != nil {
@@ -98,8 +99,6 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 	}
 
 	// Define the flags for the command
-	createCmd.Flags().StringVar(&opts.Payload, "payload", "", "The payload JSON file that defines the Stack.")
-	createCmd.MarkFlagRequired("payload")
 
 	createCmd.Flags().StringVar(&opts.PatchPayload, "patch-payload", "", "Patch original payload.json input. Add or replace values. Requires valid JSON input.")
 
