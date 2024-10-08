@@ -75,7 +75,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 				os.Exit(-1)
 			}
 
-			response, err := c.Stacks.Create(
+			response, err := c.Stacks.CreateStack(
 				context.Background(),
 				opts.Org,
 				opts.WfgGrp,

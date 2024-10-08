@@ -3,7 +3,7 @@ module github.com/StackGuardian/sg-cli
 go 1.22.4
 
 require (
-	github.com/StackGuardian/sg-sdk-go v0.0.0-20240730110642-e61397502498
+	github.com/StackGuardian/sg-sdk-go v1.0.0-beta
 	github.com/spf13/cobra v1.8.1
 )
 

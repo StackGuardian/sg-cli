@@ -128,7 +128,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 					} else {
 						opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
 					}
-					response, err := c.Workflows.Create(
+					response, err := c.Workflows.CreateWorkflow(
 						context.Background(),
 						opts.Org,
 						opts.WfgGrp,
@@ -148,7 +148,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 								cmd.PrintErrln(err)
 								continue
 							}
-							response, err := c.Workflows.Patch(
+							response, err := c.Workflows.UpdateWorkflow(
 								context.Background(),
 								opts.Org,
 								*individualWorkflow.ResourceName,
@@ -310,7 +310,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 					cmd.Println("To view the workflow run, please visit the following URL:")
 					cmd.Println(workflowRunPath)
 				} else {
-					response, err := c.Workflows.Create(
+					response, err := c.Workflows.CreateWorkflow(
 						context.Background(),
 						opts.Org,
 						opts.WfgGrp,
