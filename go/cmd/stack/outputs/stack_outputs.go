@@ -15,7 +15,7 @@ func NewOutputsCmd(c *client.Client) *cobra.Command {
 		Short: "Get outputs from stack",
 		Long:  `Get outputs from stack.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			response, err := c.Stacks.GetStackOutputs(
+			response, err := c.Stacks.ReadStackOutputs(
 				context.Background(),
 				cmd.Parent().Flags().Lookup("org").Value.String(),
 				cmd.Flags().Lookup("stack-id").Value.String(),
