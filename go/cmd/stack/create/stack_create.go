@@ -116,7 +116,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 // performPreExecutionFlagChecks performs pre-execution flag checks and returns the payload
 func performPreExecutionFlagChecks(cmd *cobra.Command, payload *sggosdk.Stack, opts *RunOptions) error {
 
-	if payload.ResourceName == nil || *payload.ResourceName == "" {
+	if payload.ResourceName == nil || payload.ResourceName.Value == "" {
 		return errors.New(">> [ERROR] Stack ResourceName is required in object payload, skipping")
 	}
 
