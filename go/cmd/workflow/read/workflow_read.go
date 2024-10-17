@@ -15,7 +15,7 @@ func NewReadCmd(c *client.Client) *cobra.Command {
 		Short: "Get details of a workflow",
 		Long:  `Get details of a workflow.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			response, err := c.Workflows.Get(
+			response, err := c.Workflows.ReadWorkflow(
 				context.Background(),
 				cmd.Parent().Flags().Lookup("org").Value.String(),
 				cmd.Flags().Lookup("workflow-id").Value.String(),

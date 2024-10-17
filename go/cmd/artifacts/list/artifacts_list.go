@@ -21,7 +21,7 @@ func NewListCmd(c *client.Client) *cobra.Command {
 		Short: "List Artifacts",
 		Long:  `List Artifacts`,
 		Run: func(cmd *cobra.Command, args []string) {
-			response, err := c.Workflows.ListAllArtifacts(
+			response, err := c.Workflows.ListAllWorkflowArtifacts(
 				context.Background(),
 				cmd.Parent().Flags().Lookup("org").Value.String(),
 				cmd.Parent().Flags().Lookup("workflow-id").Value.String(),

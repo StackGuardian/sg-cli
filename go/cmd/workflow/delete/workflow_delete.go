@@ -27,7 +27,7 @@ func NewDeleteCmd(c *client.Client) *cobra.Command {
 			opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
 			opts.WfId = cmd.Flags().Lookup("workflow-id").Value.String()
 
-			response, err := c.Workflows.Delete(
+			response, err := c.Workflows.DeleteWorkflow(
 				context.Background(),
 				opts.Org,
 				opts.WfId,
