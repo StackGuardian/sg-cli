@@ -1,0 +1,32 @@
+{
+    "Description": "Dummy Stack",
+    "ResourceName": "40y3rfv9xdxwplehcxifj",
+    "EnvironmentVariables": [
+        {
+            "kind": "PLAIN_TEXT",
+            "config": {
+                "varName": "test",
+                "textValue": "testValue"
+            }
+        }
+    ],
+    "DeploymentPlatformConfig": [
+        {
+            "kind": "AWS_RBAC",
+            "config": {
+                "integrationId": "/integrations/DummyConnector",
+                "profileName": "DummyConnector"
+            }
+        }
+    ],
+    "TemplatesConfig": {
+        "templates": [
+            {
+                "Description": "Dummy Stack",
+                "WfType": "CUSTOM",
+                "id": "cc0061e9-a75c-421b-a75b-ef918e9f4b28"
+            }
+        ],
+        "templateGroupId": "/not-an-actual-org/ansible:4"
+    }
+}

@@ -1,0 +1,44 @@
+[{
+    "CLIConfiguration": {
+    "TfStateFilePath": "",
+    "WorkflowGroup": {
+      "name": "not-an-actual-wfg" 
+        }
+  },
+        "DeploymentPlatformConfig": [
+        {
+            "config": {
+                "profileName": "DummyConnector",
+                "integrationId": "/integrations/DummyConnector"
+            },
+            "kind": "AWS_RBAC"
+        }
+    ],
+    "EnvironmentVariables": [
+       {
+        "kind":"PLAIN_TEXT",
+        "config": {
+            "varName": "test",
+            "textValue": "test"
+        }
+       }
+    ],
+    "WfType": "CUSTOM",
+    "VCSConfig": {
+        "iacVCSConfig": {
+            "iacTemplateId": "/not-an-actual-org/ansible-dummy:3",
+            "useMarketplaceTemplate": true
+        }
+    },
+    "UserJobCPU": 512,
+    "UserJobMemory": 1024,
+    "RunnerConstraints": {
+        "type": "shared",
+        "selectors": [
+            "shared"
+        ]
+    },
+    "Description": "test desc",
+    "ResourceName": "not-an-actual-workflow"
+}
+]
