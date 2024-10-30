@@ -28,7 +28,7 @@ func NewApplyCmd(c *client.Client) *cobra.Command {
 			opts.Org = cmd.Parent().PersistentFlags().Lookup("org").Value.String()
 			opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
 			opts.Stack = cmd.Flags().Lookup("stack-id").Value.String()
-			response, err := c.Stacks.RunStack(
+			response, err := c.StackWorkflowRuns.CreateStackRun(
 				context.Background(),
 				opts.Org,
 				opts.Stack,
