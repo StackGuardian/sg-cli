@@ -368,11 +368,11 @@ func TestStackOutput(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if reflect.DeepEqual(actualResponse.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"].Value,
-			tc.expectedStruct.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"].Value) == false {
+		if reflect.DeepEqual(actualResponse.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"],
+			tc.expectedStruct.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"]) == false {
 			t.Fatalf("expected \"%v\" \ngot \"%v\"",
-				tc.expectedStruct.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"].Value,
-				actualResponse.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"].Value)
+				tc.expectedStruct.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"],
+				actualResponse.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"])
 		}
 		if actualResponse.Msg != tc.expectedStruct.Msg {
 			t.Fatalf("expected \"%s\" got \"%s\"",
