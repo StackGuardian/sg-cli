@@ -28,13 +28,13 @@ func NewApplyCmd(c *client.Client) *cobra.Command {
 			opts.Org = cmd.Parent().PersistentFlags().Lookup("org").Value.String()
 			opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
 			opts.Stack = cmd.Flags().Lookup("stack-id").Value.String()
-			response, err := c.StackWorkflowRuns.CreateStackRun(
+			response, err := c.StackRuns.CreateStackRun(
 				context.Background(),
 				opts.Org,
 				opts.Stack,
 				opts.WfgGrp,
 				&sggosdk.StackAction{
-					ActionType: sggosdk.ActionTypeEnumApply,
+					ActionType: string(sggosdk.ActionEnumApply),
 				},
 			)
 			if err != nil {
@@ -52,7 +52,7 @@ func NewApplyCmd(c *client.Client) *cobra.Command {
 				"/stacks/" +
 				opts.Stack +
 				"?tab=runs"
-			cmd.Println("To view the workflow run, please visit the following URL:")
+			cmd.Println("To view the Stack run, please visit the following URL:")
 			cmd.Println(workflowRunPath)
 			cmd.Println("Stack apply executed.")
 		},

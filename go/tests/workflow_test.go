@@ -1,32 +1,20 @@
-package workflow
+package tests
 
 import (
 	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"testing"
 
+	workflowcmd "github.com/StackGuardian/sg-cli/cmd/workflow"
 	api "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	option "github.com/StackGuardian/sg-sdk-go/option"
 	"github.com/stretchr/testify/mock"
 )
-
-type mockSGSdkClient struct {
-	mock.Mock
-	response []byte
-}
-
-func (m *mockSGSdkClient) RoundTrip(request *http.Request) (*http.Response, error) {
-
-	return &http.Response{
-		Body:       io.NopCloser(bytes.NewReader(m.response)),
-		Status:     http.StatusText(http.StatusOK),
-		StatusCode: http.StatusOK,
-	}, nil
-}
 
 func TestReadWorkflow(t *testing.T) {
 	var successWorkflowReadExpected api.WorkflowGetResponse
@@ -81,7 +69,7 @@ func TestReadWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"read",
 			"--org", "not-an-actual-org",
@@ -223,7 +211,7 @@ func TestApplyWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"apply",
 			"--org", "not-an-actual-org",
@@ -346,7 +334,7 @@ func TestDestroyWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"destroy",
 			"--org", "not-an-actual-org",
@@ -432,7 +420,7 @@ func TestListWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"list",
 			"--org", "not-an-actual-org",
@@ -483,7 +471,7 @@ func TestDeleteWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"delete",
 			"--org", "not-an-actual-org",
@@ -582,12 +570,12 @@ func TestNormalCreateWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"create",
 			"--org", "not-an-actual-org",
 			"--workflow-group", "not-an-actual-workflow-group",
-			"--", "testSamples/create_workflow_normal.json",
+			"--", filepath.Join(samplePayloadsDir, createWorkflowFile),
 		})
 		b := bytes.NewBufferString("")
 		cmd.SetOut(b)
@@ -681,13 +669,13 @@ func TestBulkCreateWorkflow(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewWorkflowCmd(c)
+		cmd := workflowcmd.NewWorkflowCmd(c)
 		cmd.SetArgs([]string{
 			"create",
 			"--org", "not-an-actual-org",
 			"--workflow-group", "not-an-actual-workflow-group",
 			"--bulk",
-			"--", "testSamples/create_workflow_bulk.json",
+			"--", filepath.Join(samplePayloadsDir, "create_single_wf_in_bulk_request.json"),
 		})
 		b := bytes.NewBufferString("")
 		cmd.SetOut(b)

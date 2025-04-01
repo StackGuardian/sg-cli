@@ -44,7 +44,7 @@ func NewDeleteCmd(c *client.Client) *cobra.Command {
 		},
 	}
 
-	deleteCmd.Flags().String("workflow-id", "", "The workflow ID to retrieve.")
+	deleteCmd.Flags().String("workflow-id", "", "The workflow ID to delete.")
 	deleteCmd.MarkFlagRequired("workflow-id")
 
 	deleteCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output execution response as json to STDIN.")

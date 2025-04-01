@@ -1,0 +1,572 @@
+{
+    "ResourceName": "aws-webserver-nginx-cli-test-old-cli-3",
+    "Description": "",
+    "wfgrpName": "sg-sdk-go-test",
+    "Tags": [],
+    "Actions": {
+        "apply": {
+            "name": "Create",
+            "description": "use this action to create resources in the stack",
+            "default": true,
+            "order": {
+                "41390dae-bc6f-4bd9-8e35-f732c0e5ebb1": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "apply"
+                        }
+                    }
+                },
+                "5bb46415-7e00-4b2d-aaa9-725a7ee4bad1": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "apply"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "41390dae-bc6f-4bd9-8e35-f732c0e5ebb1"
+                        }
+                    ]
+                },
+                "619d812d-f0a5-405d-842a-052d179caaae": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "apply"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "5bb46415-7e00-4b2d-aaa9-725a7ee4bad1"
+                        }
+                    ]
+                },
+                "ca10d251-c562-4c38-a50e-65669e2e202e": {
+                    "parameters": {},
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "b53f0645-d509-4113-bd60-643634c6aa46"
+                        }
+                    ]
+                },
+                "b53f0645-d509-4113-bd60-643634c6aa46": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "apply"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "619d812d-f0a5-405d-842a-052d179caaae"
+                        }
+                    ]
+                }
+            }
+        },
+        "destroy": {
+            "name": "Destroy",
+            "description": "use this action to destroy resources in the stack",
+            "default": true,
+            "order": {
+                "41390dae-bc6f-4bd9-8e35-f732c0e5ebb1": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "destroy"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "5bb46415-7e00-4b2d-aaa9-725a7ee4bad1"
+                        }
+                    ]
+                },
+                "5bb46415-7e00-4b2d-aaa9-725a7ee4bad1": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "destroy"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "619d812d-f0a5-405d-842a-052d179caaae"
+                        }
+                    ]
+                },
+                "ca10d251-c562-4c38-a50e-65669e2e202e": {
+                    "parameters": {}
+                },
+                "619d812d-f0a5-405d-842a-052d179caaae": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "destroy"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "b53f0645-d509-4113-bd60-643634c6aa46"
+                        }
+                    ]
+                },
+                "b53f0645-d509-4113-bd60-643634c6aa46": {
+                    "parameters": {
+                        "TerraformAction": {
+                            "action": "destroy"
+                        }
+                    },
+                    "dependencies": [
+                        {
+                            "condition": {
+                                "LatestStatus": "COMPLETED"
+                            },
+                            "id": "ca10d251-c562-4c38-a50e-65669e2e202e"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "TemplatesConfig": {
+        "templateGroupId": "/demo-org/aws-webserver-nginx:6",
+        "templates": [
+            {
+                "id": "41390dae-bc6f-4bd9-8e35-f732c0e5ebb1",
+                "WfType": "TERRAFORM",
+                "ResourceName": "terraform-aws-vpc-stripped-new-wd4z",
+                "Description": "",
+                "Tags": [],
+                "EnvironmentVariables": [],
+                "DeploymentPlatformConfig": [
+                    {
+                        "kind": "AWS_RBAC",
+                        "config": {
+                            "integrationId": "/integrations/test_test",
+                            "profileName": "test_test"
+                        }
+                    }
+                ],
+                "RunnerConstraints": {
+                    "type": "shared"
+                },
+                "TerraformConfig": {
+                    "approvalPreApply": false,
+                    "managedTerraformState": true,
+                    "terraformVersion": "1.5.7",
+                    "driftCheck": true,
+                    "prePlanWfStepsConfig": [],
+                    "postApplyWfStepsConfig": [],
+                    "preApplyWfStepsConfig": [],
+                    "preInitHooks": [],
+                    "preApplyHooks": [],
+                    "postApplyHooks": [],
+                    "prePlanHooks": [],
+                    "postPlanHooks": [],
+                    "driftCron": "0 */6 * * ? *"
+                },
+                "VCSConfig": {
+                    "iacVCSConfig": {
+                        "iacTemplateId": "/demo-org/terraform-aws-vpc-stripped-new:2",
+                        "useMarketplaceTemplate": true
+                    },
+                    "iacInputData": {
+                        "data": {
+                            "name": "sg-vpc-xx",
+                            "public_subnets": [
+                                "10.0.1.0/24",
+                                "10.0.2.0/24"
+                            ],
+                            "cidr": "10.0.0.0/16",
+                            "azs": [
+                                "eu-central-1a",
+                                "eu-central-1b"
+                            ],
+                            "private_subnets": [
+                                "10.0.110.0/24",
+                                "10.0.120.0/24"
+                            ]
+                        },
+                        "schemaType": "FORM_JSONSCHEMA"
+                    }
+                },
+                "MiniSteps": {
+                    "wfChaining": {
+                        "ERRORED": [],
+                        "COMPLETED": []
+                    },
+                    "webhooks": {
+                        "ERRORED": [],
+                        "COMPLETED": [],
+                        "DRIFT_DETECTED": []
+                    },
+                    "notifications": {
+                        "email": {
+                            "ERRORED": [],
+                            "COMPLETED": [],
+                            "APPROVAL_REQUIRED": [],
+                            "CANCELLED": []
+                        }
+                    }
+                },
+                "Approvers": [],
+                "NumberOfApprovalsRequired": 0,
+                "UserSchedules": []
+            },
+            {
+                "id": "5bb46415-7e00-4b2d-aaa9-725a7ee4bad1",
+                "WfType": "TERRAFORM",
+                "ResourceName": "terraform-aws-key-pair-n4lz",
+                "Description": "",
+                "Tags": [],
+                "EnvironmentVariables": [
+                    {
+                        "config": {
+                            "textValue": "eu-central-1",
+                            "varName": "AWS_DEFAULT_REGION"
+                        },
+                        "kind": "PLAIN_TEXT"
+                    }
+                ],
+                "DeploymentPlatformConfig": [
+                    {
+                        "kind": "AWS_RBAC",
+                        "config": {
+                            "integrationId": "/integrations/test_test",
+                            "profileName": "test_test"
+                        }
+                    }
+                ],
+                "RunnerConstraints": {
+                    "type": "shared"
+                },
+                "TerraformConfig": {
+                    "approvalPreApply": false,
+                    "managedTerraformState": true,
+                    "terraformVersion": "1.5.7",
+                    "driftCheck": true,
+                    "prePlanWfStepsConfig": [],
+                    "postApplyWfStepsConfig": [],
+                    "preApplyWfStepsConfig": [],
+                    "preInitHooks": [],
+                    "preApplyHooks": [],
+                    "postApplyHooks": [],
+                    "prePlanHooks": [],
+                    "postPlanHooks": [],
+                    "driftCron": "0 */6 * * ? *"
+                },
+                "VCSConfig": {
+                    "iacVCSConfig": {
+                        "iacTemplateId": "/demo-org/terraform-aws-key-pair:2",
+                        "useMarketplaceTemplate": true
+                    },
+                    "iacInputData": {
+                        "data": {
+                            "public_key": "",
+                            "private_key_rsa_bits": 4096,
+                            "private_key_algorithm": "ED25519"
+                        },
+                        "schemaType": "FORM_JSONSCHEMA"
+                    }
+                },
+                "MiniSteps": {
+                    "wfChaining": {
+                        "ERRORED": [],
+                        "COMPLETED": []
+                    },
+                    "webhooks": {
+                        "ERRORED": [],
+                        "COMPLETED": [],
+                        "DRIFT_DETECTED": []
+                    },
+                    "notifications": {
+                        "email": {
+                            "ERRORED": [],
+                            "COMPLETED": [],
+                            "APPROVAL_REQUIRED": [],
+                            "CANCELLED": []
+                        }
+                    }
+                },
+                "Approvers": [],
+                "NumberOfApprovalsRequired": 0,
+                "UserSchedules": []
+            },
+            {
+                "id": "619d812d-f0a5-405d-842a-052d179caaae",
+                "WfType": "TERRAFORM",
+                "ResourceName": "terraform-aws-security-group-tysh",
+                "Description": "",
+                "Tags": [],
+                "EnvironmentVariables": [
+                    {
+                        "config": {
+                            "textValue": "eu-central-1",
+                            "varName": "AWS_DEFAULT_REGION"
+                        },
+                        "kind": "PLAIN_TEXT"
+                    }
+                ],
+                "DeploymentPlatformConfig": [
+                    {
+                        "kind": "AWS_RBAC",
+                        "config": {
+                            "integrationId": "/integrations/test_test",
+                            "profileName": "test_test"
+                        }
+                    }
+                ],
+                "RunnerConstraints": {
+                    "type": "shared"
+                },
+                "TerraformConfig": {
+                    "approvalPreApply": false,
+                    "managedTerraformState": true,
+                    "terraformVersion": "1.5.7",
+                    "driftCheck": true,
+                    "prePlanWfStepsConfig": [],
+                    "postApplyWfStepsConfig": [],
+                    "preApplyWfStepsConfig": [],
+                    "preInitHooks": [],
+                    "preApplyHooks": [],
+                    "postApplyHooks": [],
+                    "prePlanHooks": [],
+                    "postPlanHooks": [],
+                    "driftCron": "0 */6 * * ? *"
+                },
+                "VCSConfig": {
+                    "iacVCSConfig": {
+                        "iacTemplateId": "/demo-org/terraform-aws-security-group:2",
+                        "useMarketplaceTemplate": true
+                    },
+                    "iacInputData": {
+                        "data": {
+                            "ingress_with_cidr_blocks": [
+                                {
+                                    "to_port": "22",
+                                    "description": "SSH connection",
+                                    "protocol": "tcp",
+                                    "from_port": "22",
+                                    "cidr_blocks": "0.0.0.0/0"
+                                }
+                            ],
+                            "vpc_id": "${reference::template-group.0.outputs.vpc_id.value}",
+                            "egress_with_cidr_blocks": [
+                                {
+                                    "to_port": "65000",
+                                    "description": "All outgoing traffic allowed",
+                                    "protocol": "all",
+                                    "from_port": "0",
+                                    "cidr_blocks": "0.0.0.0/0"
+                                }
+                            ]
+                        },
+                        "schemaType": "FORM_JSONSCHEMA"
+                    }
+                },
+                "MiniSteps": {
+                    "wfChaining": {
+                        "ERRORED": [],
+                        "COMPLETED": []
+                    },
+                    "webhooks": {
+                        "ERRORED": [],
+                        "COMPLETED": [],
+                        "DRIFT_DETECTED": []
+                    },
+                    "notifications": {
+                        "email": {
+                            "ERRORED": [],
+                            "COMPLETED": [],
+                            "APPROVAL_REQUIRED": [],
+                            "CANCELLED": []
+                        }
+                    }
+                },
+                "Approvers": [],
+                "NumberOfApprovalsRequired": 0,
+                "UserSchedules": []
+            },
+            {
+                "id": "b53f0645-d509-4113-bd60-643634c6aa46",
+                "WfType": "TERRAFORM",
+                "ResourceName": "terraform-aws-ec2-instance-stripped-eupn",
+                "Description": "Terraform module which creates EC2 instance(s) on AWS",
+                "Tags": [],
+                "EnvironmentVariables": [
+                    {
+                        "config": {
+                            "textValue": "eu-central-1",
+                            "varName": "AWS_DEFAULT_REGION"
+                        },
+                        "kind": "PLAIN_TEXT"
+                    }
+                ],
+                "DeploymentPlatformConfig": [
+                    {
+                        "kind": "AWS_RBAC",
+                        "config": {
+                            "integrationId": "/integrations/test_test",
+                            "profileName": "test_test"
+                        }
+                    }
+                ],
+                "RunnerConstraints": {
+                    "type": "shared"
+                },
+                "TerraformConfig": {
+                    "approvalPreApply": false,
+                    "managedTerraformState": true,
+                    "terraformVersion": "1.5.7",
+                    "driftCheck": true,
+                    "prePlanWfStepsConfig": [],
+                    "postApplyWfStepsConfig": [],
+                    "preApplyWfStepsConfig": [],
+                    "preInitHooks": [],
+                    "preApplyHooks": [],
+                    "postApplyHooks": [],
+                    "prePlanHooks": [],
+                    "postPlanHooks": [],
+                    "driftCron": "0 */6 * * ? *"
+                },
+                "VCSConfig": {
+                    "iacVCSConfig": {
+                        "iacTemplateId": "/demo-org/terraform-aws-ec2-instance-stripped:2",
+                        "useMarketplaceTemplate": true
+                    },
+                    "iacInputData": {
+                        "data": {
+                            "name": "",
+                            "key_name": "${workflow::sg-sdk-go-test.aws-webserver-nginx-4dzw.terraform-aws-key-pair-n4lz.outputs.key_pair_name.value}",
+                            "vpc_security_group_ids": [
+                                "${workflow::sg-sdk-go-test.aws-webserver-nginx-4dzw.terraform-aws-security-group-tysh.outputs.security_group_id.value}"
+                            ],
+                            "subnet_id": "${workflow::sg-sdk-go-test.aws-webserver-nginx-4dzw.terraform-aws-vpc-stripped-new-wd4z.outputs.public_subnets.value.0}",
+                            "ami": "ami-0e8851af9b98bb0f5",
+                            "instance_type": "t2.small"
+                        },
+                        "schemaType": "FORM_JSONSCHEMA"
+                    }
+                },
+                "MiniSteps": {
+                    "wfChaining": {
+                        "ERRORED": [],
+                        "COMPLETED": []
+                    },
+                    "webhooks": {
+                        "ERRORED": [],
+                        "COMPLETED": [],
+                        "DRIFT_DETECTED": []
+                    },
+                    "notifications": {
+                        "email": {
+                            "ERRORED": [],
+                            "COMPLETED": [],
+                            "APPROVAL_REQUIRED": [],
+                            "CANCELLED": []
+                        }
+                    }
+                },
+                "Approvers": [],
+                "NumberOfApprovalsRequired": 0,
+                "UserSchedules": []
+            },
+            {
+                "id": "ca10d251-c562-4c38-a50e-65669e2e202e",
+                "WfType": "CUSTOM",
+                "ResourceName": "ansible-nginx-7qn3",
+                "Description": "",
+                "Tags": [],
+                "EnvironmentVariables": [
+                    {
+                        "config": {
+                            "textValue": "<insertkeyhere>",
+                            "varName": "ANSIBLE_SSH_PRIVATE_KEY"
+                        },
+                        "kind": "PLAIN_TEXT"
+                    }
+                ],
+                "DeploymentPlatformConfig": [
+                    {
+                        "kind": "AWS_RBAC",
+                        "config": {
+                            "integrationId": "/integrations/test_test",
+                            "profileName": "test_test"
+                        }
+                    }
+                ],
+                "RunnerConstraints": {
+                    "type": "shared"
+                },
+                "WfStepsConfig": [
+                    {
+                        "name": "ansible-playbook",
+                        "wfStepTemplateId": "/demo-org/ansible:6",
+                        "wfStepInputData": {
+                            "schemaType": "FORM_JSONSCHEMA",
+                            "data": {
+                                "playbookPath": "playbook.yml",
+                                "ansibleAction": "run",
+                                "captureOutputs": true,
+                                "ansibleLocalhost": true
+                            }
+                        },
+                        "approval": false
+                    }
+                ],
+                "VCSConfig": {
+                    "iacVCSConfig": {
+                        "iacTemplateId": "/demo-org/ansible-nginx:1",
+                        "useMarketplaceTemplate": true
+                    },
+                    "iacInputData": {
+                        "data": {
+                            "ansible_username": "ubuntu",
+                            "host_ip": "${workflow::sg-sdk-go-test.aws-webserver-nginx-4dzw.terraform-aws-ec2-instance-stripped-eupn.outputs.public_ip.value}"
+                        },
+                        "schemaType": "FORM_JSONSCHEMA"
+                    }
+                },
+                "MiniSteps": {
+                    "wfChaining": {
+                        "ERRORED": [],
+                        "COMPLETED": []
+                    },
+                    "webhooks": {
+                        "ERRORED": [],
+                        "COMPLETED": [],
+                        "DRIFT_DETECTED": []
+                    },
+                    "notifications": {
+                        "email": {
+                            "ERRORED": [],
+                            "COMPLETED": [],
+                            "APPROVAL_REQUIRED": [],
+                            "CANCELLED": []
+                        }
+                    }
+                },
+                "Approvers": [],
+                "NumberOfApprovalsRequired": 0,
+                "UserSchedules": []
+            }
+        ]
+    }
+}

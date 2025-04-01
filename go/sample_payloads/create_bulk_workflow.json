@@ -1,0 +1,168 @@
+[
+    {
+        "CLIConfiguration": {
+            "TfStateFilePath": "",
+            "WorkflowGroup": {
+                "name": "sg-sdk-go-test"
+            }
+        },
+        "DeploymentPlatformConfig": [
+            {
+                "config": {
+                    "profileName": "DummyConnectorForGoSDK",
+                    "integrationId": "/integrations/DummyConnectorForGoSDK"
+                },
+                "kind": "AWS_RBAC"
+            }
+        ],
+        "EnvironmentVariables": [
+            {
+                "kind": "PLAIN_TEXT",
+                "config": {
+                    "varName": "test",
+                    "textValue": "test"
+                }
+            }
+        ],
+        "WfType": "CUSTOM",
+        "VCSConfig": {
+            "iacVCSConfig": {
+                "iacTemplateId": "/demo-org/ansible-dummy:3",
+                "useMarketplaceTemplate": true
+            }
+        },
+        "UserJobCPU": 512,
+        "UserJobMemory": 1024,
+        "RunnerConstraints": {
+            "type": "shared",
+            "selectors": [
+                "shared"
+            ]
+        },
+        "Description": "test desc",
+        "ResourceName": ""
+    },
+    {
+        "CLIConfiguration": {
+            "TfStateFilePath": "../sample_payloads/nonExistent.tfstate",
+            "WorkflowGroup": {
+                "name": "sg-sdk-go-test"
+            }
+        },
+        "DeploymentPlatformConfig": [
+            {
+                "config": {
+                    "profileName": "DummyConnectorForGoSDK",
+                    "integrationId": "/integrations/DummyConnectorForGoSDK"
+                },
+                "kind": "AWS_RBAC"
+            }
+        ],
+        "EnvironmentVariables": [
+            {
+                "kind": "PLAIN_TEXT",
+                "config": {
+                    "varName": "test",
+                    "textValue": "test"
+                }
+            }
+        ],
+        "WfType": "CUSTOM",
+        "VCSConfig": {
+            "iacVCSConfig": {
+                "iacTemplateId": "/demo-org/ansible-dummy:3",
+                "useMarketplaceTemplate": true
+            }
+        },
+        "UserJobCPU": 512,
+        "UserJobMemory": 1024,
+        "RunnerConstraints": {
+            "type": "shared",
+            "selectors": [
+                "shared"
+            ]
+        },
+        "Description": "test desc",
+        "ResourceName": "bulk-workflow-create-test-1"
+    },
+    {
+        "DeploymentPlatformConfig": [
+            {
+                "config": {
+                    "profileName": "DummyConnectorForGoSDK",
+                    "integrationId": "/integrations/DummyConnectorForGoSDK"
+                },
+                "kind": "AWS_RBAC"
+            }
+        ],
+        "EnvironmentVariables": [
+            {
+                "kind": "PLAIN_TEXT",
+                "config": {
+                    "varName": "test",
+                    "textValue": "test"
+                }
+            }
+        ],
+        "WfType": "CUSTOM",
+        "VCSConfig": {
+            "iacVCSConfig": {
+                "iacTemplateId": "/demo-org/ansible-dummy:3",
+                "useMarketplaceTemplate": true
+            }
+        },
+        "UserJobCPU": 512,
+        "UserJobMemory": 1024,
+        "RunnerConstraints": {
+            "type": "shared",
+            "selectors": [
+                "shared"
+            ]
+        },
+        "Description": "test desc",
+        "ResourceName": "bulk-workflow-create-test-2"
+    },
+    {
+        "CLIConfiguration": {
+            "TfStateFilePath": "../sample_payloads/tfStateDumy.json",
+            "WorkflowGroup": {
+                "name": "sg-sdk-go-test"
+            }
+        },
+        "DeploymentPlatformConfig": [
+            {
+                "config": {
+                    "profileName": "DummyConnectorForGoSDK",
+                    "integrationId": "/integrations/DummyConnectorForGoSDK"
+                },
+                "kind": "AWS_RBAC"
+            }
+        ],
+        "EnvironmentVariables": [
+            {
+                "kind": "PLAIN_TEXT",
+                "config": {
+                    "varName": "test",
+                    "textValue": "test"
+                }
+            }
+        ],
+        "WfType": "CUSTOM",
+        "VCSConfig": {
+            "iacVCSConfig": {
+                "iacTemplateId": "/demo-org/ansible-dummy:3",
+                "useMarketplaceTemplate": true
+            }
+        },
+        "UserJobCPU": 512,
+        "UserJobMemory": 1024,
+        "RunnerConstraints": {
+            "type": "shared",
+            "selectors": [
+                "shared"
+            ]
+        },
+        "Description": "test desc",
+        "ResourceName": "bulk-workflow-create-test-3"
+    }
+]

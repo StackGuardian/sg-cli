@@ -5,6 +5,7 @@ import (
 
 	"github.com/StackGuardian/sg-cli/cmd/stack/apply"
 	"github.com/StackGuardian/sg-cli/cmd/stack/create"
+	"github.com/StackGuardian/sg-cli/cmd/stack/delete"
 	"github.com/StackGuardian/sg-cli/cmd/stack/destroy"
 	"github.com/StackGuardian/sg-cli/cmd/stack/outputs"
 	"github.com/StackGuardian/sg-sdk-go/client"
@@ -20,6 +21,7 @@ func NewStackCmd(c *client.Client) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(`Sub-commands:
   create      Create new stack
+  delete      Deletes an existing stack
   apply       Execute "Apply" on existing stack
   destroy     Execute "Destroy" on existing stack
   outputs     Get outputs from stack`)
@@ -35,6 +37,7 @@ func NewStackCmd(c *client.Client) *cobra.Command {
 	stackCmd.AddCommand(outputs.NewOutputsCmd(c))
 	stackCmd.AddCommand(destroy.NewDestroyCmd(c))
 	stackCmd.AddCommand(create.NewCreateCmd(c))
+	stackCmd.AddCommand(delete.NewDeleteCmd(c))
 	stackCmd.AddCommand(apply.NewApplyCmd(c))
 
 	return stackCmd

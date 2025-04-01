@@ -83,7 +83,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 			)
 			if err != nil {
 				if strings.Contains(err.Error(), "cannot unmarshal") {
-					cmd.PrintErrln("Stack was created successfully but an error occured while reading the response.")
+					cmd.Println("Stack was created successfully but an error occured while reading the response JSON.")
 					os.Exit(-1)
 				}
 				cmd.PrintErrln("== Failed To Create Stack ==")
