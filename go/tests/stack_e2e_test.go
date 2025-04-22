@@ -1,8 +1,9 @@
 package tests
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"path/filepath"
 	"testing"
 	"time"
@@ -24,8 +25,11 @@ const (
 )
 
 func generateStackName() string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return fmt.Sprintf("test-stack-%d-%d", time.Now().Unix(), r.Intn(1000))
+	n, err := rand.Int(rand.Reader, big.NewInt(1000))
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("test-stack-%d-%d", time.Now().Unix(), n.Int64())
 }
 
 func TestStackE2E(t *testing.T) {
