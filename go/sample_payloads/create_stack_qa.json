@@ -1,0 +1,44 @@
+{
+    "IsActive": "1",
+    "Tags": [],
+    "DeploymentPlatformConfig": [
+        {
+            "config": {
+                "profileName": "DummyConnectorForGoSDK",
+                "integrationId": "/integrations/DummyConnectorForGoSDK"
+            },
+            "kind": "AWS_RBAC"
+        }
+    ],
+    "TemplatesConfig": {
+        "templateGroupId": "/demo-org/ansible:4",
+        "templates": [
+            {
+                "NumberOfApprovalsRequired": 0,
+                "DeploymentPlatformConfig": [],
+                "Description": "test",
+                "WfStepsConfig": [],
+                "UserSchedules": [],
+                "GitHubComSync": {
+                    "pull_request_opened": {
+                        "createWfRun": {
+                            "enabled": false
+                        }
+                    }
+                },
+                "WfType": "CUSTOM",
+                "EnvironmentVariables": [],
+                "Approvers": [],
+                "id": "cc0061e9-a75c-421b-a75b-ef918e9f4b28",
+                "VCSConfig": {
+                    "iacVCSConfig": {
+                        "iacTemplateId": "/demo-org/ansible:2",
+                        "useMarketplaceTemplate": true
+                    }
+                }
+            }
+        ]
+    },
+    "Description": "test stack",
+    "ResourceName": "stack-create-test-1"
+}

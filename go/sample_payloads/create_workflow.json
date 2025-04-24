@@ -1,15 +1,9 @@
-[{
-    "CLIConfiguration": {
-    "TfStateFilePath": "",
-    "WorkflowGroup": {
-      "name": "not-an-actual-wfg" 
-        }
-  },
-        "DeploymentPlatformConfig": [
+{
+    "DeploymentPlatformConfig": [
         {
             "config": {
-                "profileName": "DummyConnector",
-                "integrationId": "/integrations/DummyConnector"
+                "profileName": "DummyConnectorForGoSDK",
+                "integrationId": "/integrations/DummyConnectorForGoSDK"
             },
             "kind": "AWS_RBAC"
         }
@@ -26,7 +20,7 @@
     "WfType": "CUSTOM",
     "VCSConfig": {
         "iacVCSConfig": {
-            "iacTemplateId": "/not-an-actual-org/ansible-dummy:3",
+            "iacTemplateId": "/demo-org/ansible-dummy:3",
             "useMarketplaceTemplate": true
         }
     },
@@ -39,6 +33,5 @@
         ]
     },
     "Description": "test desc",
-    "ResourceName": "not-an-actual-workflow"
+    "ResourceName": "test-workflow-5"
 }
-]

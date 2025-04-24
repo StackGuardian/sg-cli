@@ -1,0 +1,418 @@
+{
+    "IsActive": "1",
+    "Tags": [],
+    "DeploymentPlatformConfig": [
+        {
+            "config": {
+                "profileName": "DummyConnectorForGoSDK",
+                "integrationId": "/integrations/DummyConnectorForGoSDK"
+            },
+            "kind": "AWS_RBAC"
+        }
+    ],
+    "TemplatesConfig": {
+        "templateGroupId": "/stackguardian/aws-webserver-nginx:8",
+            "templates": [
+                {
+                    "NumberOfApprovalsRequired": 0.0,
+                    "DeploymentPlatformConfig": [
+                        {
+                            "config": {
+                                "profileName": "testAWSConnector",
+                                "integrationId": "/integrations/testAWSConnector"
+                            },
+                            "kind": "AWS_RBAC"
+                        }
+                    ],
+                    "MiniSteps": {
+                        "webhooks": {
+                            "COMPLETED": [],
+                            "DRIFT_DETECTED": [],
+                            "ERRORED": []
+                        },
+                        "notifications": {
+                            "email": {
+                                "APPROVAL_REQUIRED": [],
+                                "CANCELLED": [],
+                                "COMPLETED": [],
+                                "ERRORED": []
+                            }
+                        },
+                        "wfChaining": {
+                            "COMPLETED": [],
+                            "ERRORED": []
+                        }
+                    },
+                    "Description": "",
+                    "ResourceName": "terraform-aws-vpc-stripped-R4v9",
+                    "TerraformConfig": {
+                        "terraformVersion": "1.5.7",
+                        "approvalPreApply": false,
+                        "managedTerraformState": true,
+                        "driftCheck": false
+                    },
+                    "UserSchedules": [],
+                    "GitHubComSync": {
+                        "pull_request_opened": {
+                            "createWfRun": {
+                                "enabled": false
+                            }
+                        }
+                    },
+                    "WfType": "TERRAFORM",
+                    "EnvironmentVariables": [],
+                    "Approvers": [],
+                    "id": "0dcd24e8-2ee5-453a-ab3e-26e6cf3c620d",
+                    "VCSConfig": {
+                        "iacVCSConfig": {
+                            "iacTemplateId": "/stackguardian/terraform-aws-vpc-stripped:22",
+                            "useMarketplaceTemplate": true
+                        },
+                        "iacInputData": {
+                            "schemaType": "FORM_JSONSCHEMA",
+                            "data": {
+                                "name": "sg-vpc-xx",
+                                "public_subnets": [
+                                    "10.0.1.0/24",
+                                    "10.0.2.0/24"
+                                ],
+                                "cidr": "10.0.0.0/16",
+                                "azs": [
+                                    "eu-central-1a",
+                                    "eu-central-1b"
+                                ],
+                                "private_subnets": [
+                                    "10.0.110.0/24",
+                                    "10.0.120.0/24"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "NumberOfApprovalsRequired": 0.0,
+                    "DeploymentPlatformConfig": [
+                        {
+                            "config": {
+                                "profileName": "testAWSConnector",
+                                "integrationId": "/integrations/testAWSConnector"
+                            },
+                            "kind": "AWS_RBAC"
+                        }
+                    ],
+                    "MiniSteps": {
+                        "webhooks": {
+                            "COMPLETED": [],
+                            "DRIFT_DETECTED": [],
+                            "ERRORED": []
+                        },
+                        "notifications": {
+                            "email": {
+                                "APPROVAL_REQUIRED": [],
+                                "CANCELLED": [],
+                                "COMPLETED": [],
+                                "ERRORED": []
+                            }
+                        },
+                        "wfChaining": {
+                            "COMPLETED": [],
+                            "ERRORED": []
+                        }
+                    },
+                    "Description": "",
+                    "ResourceName": "terraform-aws-key-pair-Mhae",
+                    "TerraformConfig": {
+                        "terraformVersion": "1.5.7",
+                        "approvalPreApply": false,
+                        "managedTerraformState": true,
+                        "driftCheck": false
+                    },
+                    "UserSchedules": [],
+                    "GitHubComSync": {
+                        "pull_request_opened": {
+                            "createWfRun": {
+                                "enabled": false
+                            }
+                        }
+                    },
+                    "WfType": "TERRAFORM",
+                    "EnvironmentVariables": [
+                        {
+                            "config": {
+                                "textValue": "eu-central-1",
+                                "varName": "AWS_DEFAULT_REGION"
+                            },
+                            "kind": "PLAIN_TEXT"
+                        }
+                    ],
+                    "Approvers": [],
+                    "id": "f78dde11-4607-4349-9a53-f35860adbbf4",
+                    "VCSConfig": {
+                        "iacVCSConfig": {
+                            "iacTemplateId": "/stackguardian/terraform-aws-key-pair:4",
+                            "useMarketplaceTemplate": true
+                        },
+                        "iacInputData": {
+                            "schemaType": "FORM_JSONSCHEMA",
+                            "data": {
+                                "public_key": "",
+                                "private_key_rsa_bits": 4096.0,
+                                "private_key_algorithm": "ED25519"
+                            }
+                        }
+                    }
+                },
+                {
+                    "NumberOfApprovalsRequired": 0.0,
+                    "DeploymentPlatformConfig": [
+                        {
+                            "config": {
+                                "profileName": "testAWSConnector",
+                                "integrationId": "/integrations/testAWSConnector"
+                            },
+                            "kind": "AWS_RBAC"
+                        }
+                    ],
+                    "MiniSteps": {
+                        "webhooks": {
+                            "COMPLETED": [],
+                            "DRIFT_DETECTED": [],
+                            "ERRORED": []
+                        },
+                        "notifications": {
+                            "email": {
+                                "APPROVAL_REQUIRED": [],
+                                "CANCELLED": [],
+                                "COMPLETED": [],
+                                "ERRORED": []
+                            }
+                        },
+                        "wfChaining": {
+                            "COMPLETED": [],
+                            "ERRORED": []
+                        }
+                    },
+                    "Description": "",
+                    "ResourceName": "terraform-aws-security-group-9Ri5",
+                    "TerraformConfig": {
+                        "terraformVersion": "1.5.7",
+                        "approvalPreApply": false,
+                        "managedTerraformState": true,
+                        "driftCheck": false
+                    },
+                    "UserSchedules": [],
+                    "GitHubComSync": {
+                        "pull_request_opened": {
+                            "createWfRun": {
+                                "enabled": false
+                            }
+                        }
+                    },
+                    "WfType": "TERRAFORM",
+                    "EnvironmentVariables": [
+                        {
+                            "config": {
+                                "textValue": "eu-central-1",
+                                "varName": "AWS_DEFAULT_REGION"
+                            },
+                            "kind": "PLAIN_TEXT"
+                        }
+                    ],
+                    "Approvers": [],
+                    "id": "ceceae79-adb5-4971-ae4b-8d79ce242abd",
+                    "VCSConfig": {
+                        "iacVCSConfig": {
+                            "iacTemplateId": "/stackguardian/terraform-aws-security-group:10",
+                            "useMarketplaceTemplate": true
+                        },
+                        "iacInputData": {
+                            "schemaType": "FORM_JSONSCHEMA",
+                            "data": {
+                                "ingress_with_cidr_blocks": [
+                                    {
+                                        "to_port": "22",
+                                        "description": "SSH connection",
+                                        "protocol": "tcp",
+                                        "from_port": "22",
+                                        "cidr_blocks": "0.0.0.0/0"
+                                    }
+                                ],
+                                "vpc_id": "${workflow::testWFG.SWF.terraform-aws-vpc-stripped-R4v9.outputs.vpc_id.value}",
+                                "egress_with_cidr_blocks": [
+                                    {
+                                        "to_port": "65000",
+                                        "description": "All outgoing traffic allowed",
+                                        "protocol": "all",
+                                        "from_port": "0",
+                                        "cidr_blocks": "0.0.0.0/0"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "NumberOfApprovalsRequired": 0.0,
+                    "DeploymentPlatformConfig": [
+                        {
+                            "config": {
+                                "profileName": "testAWSConnector",
+                                "integrationId": "/integrations/testAWSConnector"
+                            },
+                            "kind": "AWS_RBAC"
+                        }
+                    ],
+                    "MiniSteps": {
+                        "webhooks": {
+                            "COMPLETED": [],
+                            "DRIFT_DETECTED": [],
+                            "ERRORED": []
+                        },
+                        "notifications": {
+                            "email": {
+                                "APPROVAL_REQUIRED": [],
+                                "CANCELLED": [],
+                                "COMPLETED": [],
+                                "ERRORED": []
+                            }
+                        },
+                        "wfChaining": {
+                            "COMPLETED": [],
+                            "ERRORED": []
+                        }
+                    },
+                    "Description": "",
+                    "ResourceName": "terraform-aws-ec2-instance-stripped-oH2G",
+                    "TerraformConfig": {
+                        "terraformVersion": "1.5.7",
+                        "approvalPreApply": false,
+                        "managedTerraformState": true,
+                        "driftCheck": false
+                    },
+                    "UserSchedules": [],
+                    "GitHubComSync": {
+                        "pull_request_opened": {
+                            "createWfRun": {
+                                "enabled": false
+                            }
+                        }
+                    },
+                    "WfType": "TERRAFORM",
+                    "EnvironmentVariables": [
+                        {
+                            "config": {
+                                "textValue": "eu-central-1",
+                                "varName": "AWS_DEFAULT_REGION"
+                            },
+                            "kind": "PLAIN_TEXT"
+                        }
+                    ],
+                    "Approvers": [],
+                    "id": "ab7e9053-e4fa-434d-bdd9-9b9bac5bfdfb",
+                    "VCSConfig": {
+                        "iacVCSConfig": {
+                            "iacTemplateId": "/stackguardian/terraform-aws-ec2-instance-stripped:13",
+                            "useMarketplaceTemplate": true
+                        },
+                        "iacInputData": {
+                            "schemaType": "FORM_JSONSCHEMA",
+                            "data": {
+                                "name": "",
+                                "key_name": "${workflow::testWFG.SWF.terraform-aws-key-pair-Mhae.outputs.key_pair_name.value}",
+                                "vpc_security_group_ids": [
+                                    "${workflow::testWFG.SWF.terraform-aws-security-group-9Ri5.outputs.security_group_id.value}"
+                                ],
+                                "subnet_id": "${workflow::testWFG.SWF.terraform-aws-vpc-stripped-R4v9.outputs.public_subnets.value.0}",
+                                "ami": "ami-0e8851af9b98bb0f5",
+                                "instance_type": "t2.small"
+                            }
+                        }
+                    }
+                },
+                {
+                    "NumberOfApprovalsRequired": 0.0,
+                    "DeploymentPlatformConfig": [
+                        {
+                            "config": {
+                                "profileName": "testAWSConnector",
+                                "integrationId": "/integrations/testAWSConnector"
+                            },
+                            "kind": "AWS_RBAC"
+                        }
+                    ],
+                    "MiniSteps": {
+                        "webhooks": {
+                            "COMPLETED": [],
+                            "DRIFT_DETECTED": [],
+                            "ERRORED": []
+                        },
+                        "notifications": {
+                            "email": {
+                                "APPROVAL_REQUIRED": [],
+                                "CANCELLED": [],
+                                "COMPLETED": [],
+                                "ERRORED": []
+                            }
+                        },
+                        "wfChaining": {
+                            "COMPLETED": [],
+                            "ERRORED": []
+                        }
+                    },
+                    "Description": "",
+                    "ResourceName": "ansible-nginx-m5D6",
+                    "WfStepsConfig": [
+                        {
+                            "name": "ansible-playbook",
+                            "wfStepTemplateId": "/stackguardian/ansible:14",
+                            "wfStepInputData": {
+                                "schemaType": "FORM_JSONSCHEMA",
+                                "data": {
+                                    "playbookPath": "playbook.yml",
+                                    "captureOutputs": true,
+                                    "ansibleLocalhost": true,
+                                    "ansibleAction": "run"
+                                }
+                            },
+                            "approval": false
+                        }
+                    ],
+                    "UserSchedules": [],
+                    "GitHubComSync": {
+                        "pull_request_opened": {
+                            "createWfRun": {
+                                "enabled": false
+                            }
+                        }
+                    },
+                    "WfType": "CUSTOM",
+                    "EnvironmentVariables": [
+                        {
+                            "config": {
+                                "textValue": "<insertkeyhere>",
+                                "varName": "ANSIBLE_SSH_PRIVATE_KEY"
+                            },
+                            "kind": "PLAIN_TEXT"
+                        }
+                    ],
+                    "Approvers": [],
+                    "id": "a652583a-4805-4fb4-9dce-d70b662b40f3",
+                    "VCSConfig": {
+                        "iacVCSConfig": {
+                            "iacTemplateId": "/stackguardian/ansible-nginx:6",
+                            "useMarketplaceTemplate": true
+                        },
+                        "iacInputData": {
+                            "schemaType": "FORM_JSONSCHEMA",
+                            "data": {
+                                "ansible_username": "ubuntu",
+                                "host_ip": "${workflow::testWFG.SWF.terraform-aws-ec2-instance-stripped-oH2G.outputs.public_ip.value}"
+                            }
+                        }
+                    }
+                }
+            ]
+    },
+    "Description": "test stack",
+    "ResourceName": "dummyStack1"
+}

@@ -1,0 +1,36 @@
+[
+    {
+        "CLIConfiguration": {
+            "TfStateFilePath": "../sample_payloads/tfStateDumy.json",
+            "WorkflowGroup": {
+                "name": "sg-sdk-go-test"
+            }
+        },
+        "DeploymentPlatformConfig": [
+            {
+                "config": {
+                    "profileName": "DummyConnectorForGoSDK",
+                    "integrationId": "/integrations/DummyConnectorForGoSDK"
+                },
+                "kind": "AWS_RBAC"
+            }
+        ],
+        "WfType": "CUSTOM",
+        "VCSConfig": {
+            "iacVCSConfig": {
+                "iacTemplateId": "/demo-org/ansible-dummy:3",
+                "useMarketplaceTemplate": true
+            }
+        },
+        "UserJobCPU": 512,
+        "UserJobMemory": 1024,
+        "RunnerConstraints": {
+            "type": "shared",
+            "selectors": [
+                "shared"
+            ]
+        },
+        "Description": "test desc",
+        "ResourceName": "unmarshaltest"
+    }
+]

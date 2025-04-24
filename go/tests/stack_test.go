@@ -1,32 +1,20 @@
-package stack
+package tests
 
 import (
 	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"testing"
 
+	stackcmd "github.com/StackGuardian/sg-cli/cmd/stack"
 	api "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	option "github.com/StackGuardian/sg-sdk-go/option"
 	"github.com/stretchr/testify/mock"
 )
-
-type mockSGSdkClient struct {
-	mock.Mock
-	response []byte
-}
-
-func (m *mockSGSdkClient) RoundTrip(request *http.Request) (*http.Response, error) {
-
-	return &http.Response{
-		Body:       io.NopCloser(bytes.NewReader(m.response)),
-		Status:     http.StatusText(http.StatusOK),
-		StatusCode: http.StatusOK,
-	}, nil
-}
 
 func TestApplyStack(t *testing.T) {
 	var successfulStackApplyExpected api.GeneratedStackRunsResponse
@@ -133,19 +121,21 @@ func TestApplyStack(t *testing.T) {
 		name           string
 		expectedString string
 		expectedByte   []byte
+		statusCode     int
 	}{
 		{
 			name:           "Success",
-			expectedString: "To view the workflow run, please visit the following URL:\nhttps://app.stackguardian.io/orchestrator/orgs/not-an-actual-org/wfgrps/not-an-actual-workflow-group/stacks/not-an-actual-stack?tab=runs\nStack apply executed.\n",
+			expectedString: "To view the Stack run, please visit the following URL:\nhttps://app.stackguardian.io/orchestrator/orgs/not-an-actual-org/wfgrps/not-an-actual-workflow-group/stacks/not-an-actual-stack?tab=runs\nStack apply executed.\n",
 			expectedByte:   successExpected,
+			statusCode:     http.StatusOK,
 		},
 	}
 
 	for _, tc := range cases {
-		mockClient := &mockSGSdkClient{response: tc.expectedByte}
+		mockClient := &mockSGSdkClient{response: tc.expectedByte, statusCode: tc.statusCode}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewStackCmd(c)
+		cmd := stackcmd.NewStackCmd(c)
 		cmd.SetArgs([]string{
 			"apply",
 			"--org", "not-an-actual-org",
@@ -274,19 +264,21 @@ func TestDestroyStack(t *testing.T) {
 		name           string
 		expectedString string
 		expectedByte   []byte
+		statusCode     int
 	}{
 		{
 			name:           "Success",
-			expectedString: "To view the workflow run, please visit the following URL:\nhttps://app.stackguardian.io/orchestrator/orgs/not-an-actual-org/wfgrps/not-an-actual-workflow-group/stacks/not-an-actual-stack?tab=runs\nStack Workflow destroy run successfully.\n",
+			expectedString: "To view the Stack run, please visit the following URL:\nhttps://app.stackguardian.io/orchestrator/orgs/not-an-actual-org/wfgrps/not-an-actual-workflow-group/stacks/not-an-actual-stack?tab=runs\nStack Workflow destroy run successfully.\n",
 			expectedByte:   successExpected,
+			statusCode:     http.StatusOK,
 		},
 	}
 
 	for _, tc := range cases {
-		mockClient := &mockSGSdkClient{response: tc.expectedByte}
+		mockClient := &mockSGSdkClient{response: tc.expectedByte, statusCode: tc.statusCode}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewStackCmd(c)
+		cmd := stackcmd.NewStackCmd(c)
 		cmd.SetArgs([]string{
 			"destroy",
 			"--org", "not-an-actual-org",
@@ -315,15 +307,8 @@ func TestStackOutput(t *testing.T) {
 	successExpected := []byte(`{
     "msg": "Stack output fetched successfully",
     "data": {
-        "/wfs/null-resource-tf-og2G": {
-            "outputs": {
-                "message_length": {
-                    "sensitive": false,
-                    "type": "number",
-                    "value": 12
-                }
-            }
-        }
+        "/wfs/ansible-0": "signed_url_1",
+        "/wfs/3v15qwtk0qz8t4r2z2354": "signed_url_2"
     }
 }`)
 	err := json.Unmarshal(successExpected, &successfulStackOutputsExpected)
@@ -335,19 +320,21 @@ func TestStackOutput(t *testing.T) {
 		name           string
 		expectedStruct *api.GeneratedStackOutputsResponse
 		expectedByte   []byte
+		statusCode     int
 	}{
 		{
 			name:           "Success",
 			expectedStruct: &successfulStackOutputsExpected,
 			expectedByte:   successExpected,
+			statusCode:     http.StatusOK,
 		},
 	}
 
 	for _, tc := range cases {
-		mockClient := &mockSGSdkClient{response: tc.expectedByte}
+		mockClient := &mockSGSdkClient{response: tc.expectedByte, statusCode: tc.statusCode}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewStackCmd(c)
+		cmd := stackcmd.NewStackCmd(c)
 		cmd.SetArgs([]string{
 			"outputs",
 			"--org", "not-an-actual-org",
@@ -368,11 +355,11 @@ func TestStackOutput(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if reflect.DeepEqual(actualResponse.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"],
-			tc.expectedStruct.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"]) == false {
+		if reflect.DeepEqual(actualResponse.Data["/wfs/ansible-0"],
+			tc.expectedStruct.Data["/wfs/ansible-0"]) == false {
 			t.Fatalf("expected \"%v\" \ngot \"%v\"",
-				tc.expectedStruct.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"],
-				actualResponse.Data["/wfs/null-resource-tf-og2G"].Outputs["message_length"])
+				tc.expectedStruct.Data["/wfs/ansible-0"],
+				actualResponse.Data["/wfs/ansible-0"])
 		}
 		if actualResponse.Msg != tc.expectedStruct.Msg {
 			t.Fatalf("expected \"%s\" got \"%s\"",
@@ -543,24 +530,26 @@ func TestNormalCreateStack(t *testing.T) {
 		name           string
 		expectedString string
 		expectedByte   []byte
+		statusCode     int
 	}{
 		{
 			name:           "Success",
 			expectedString: "Stack created successfully.\n",
 			expectedByte:   successExpected,
+			statusCode:     http.StatusOK,
 		},
 	}
 
 	for _, tc := range cases {
-		mockClient := &mockSGSdkClient{response: tc.expectedByte}
+		mockClient := &mockSGSdkClient{response: tc.expectedByte, statusCode: tc.statusCode}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewStackCmd(c)
+		cmd := stackcmd.NewStackCmd(c)
 		cmd.SetArgs([]string{
 			"create",
 			"--org", "not-an-actual-org",
 			"--workflow-group", "not-an-actual-workflow-group",
-			"--", "testSamples/create_stack.json",
+			"--", filepath.Join(samplePayloadsDir, createStackFile),
 		})
 		b := bytes.NewBufferString("")
 		cmd.SetOut(b)
@@ -575,5 +564,93 @@ func TestNormalCreateStack(t *testing.T) {
 				tc.expectedString,
 				string(out))
 		}
+	}
+}
+
+func TestDeleteStack(t *testing.T) {
+	// Success response for a standard stack deletion
+	successExpected := []byte(`{
+	    "msg": "Stack deleted successfully",
+	    "data": {
+	        "ResourceName": "test-stack",
+	        "ResourceId": "/stacks/test-stack",
+	        "ResourceType": "STACK",
+	        "OrgId": "/orgs/not-an-actual-org",
+	        "SubResourceId": "/wfgrps/not-an-actual-workflow-group/stacks/test-stack",
+	        "ParentId": "/orgs/not-an-actual-org/wfgrps/not-an-actual-workflow-group",
+	        "CreatedAt": 1730113178197,
+	        "ModifiedAt": 1730113178197,
+	        "Authors": [
+	            "dummy@dummy.com"
+	        ],
+	        "Description": "Test stack for deletion"
+	    }
+	}`)
+
+	// Define common test constants
+	const (
+		orgName         = "not-an-actual-org"
+		workflowGroup   = "not-an-actual-workflow-group"
+		stackID         = "test-stack"
+		nonEmptyStackID = "non-empty-stack"
+	)
+
+	cases := []struct {
+		name           string
+		expectedString string
+		expectedByte   []byte
+		statusCode     int
+		args           []string
+		expectError    bool
+	}{
+		{
+			name:           "Success - Standard Delete",
+			expectedString: "Stack deleted successfully.\n",
+			expectedByte:   successExpected,
+			args: []string{
+				"delete",
+				"--org", orgName,
+				"--workflow-group", workflowGroup,
+				"--stack-id", stackID,
+			},
+			expectError: false,
+			statusCode:  http.StatusOK,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockClient := &mockSGSdkClient{response: tc.expectedByte, statusCode: tc.statusCode}
+			mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
+			c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
+			cmd := stackcmd.NewStackCmd(c)
+			cmd.SetArgs(tc.args)
+			b := bytes.NewBufferString("")
+			cmd.SetOut(b)
+
+			var err error
+			if tc.expectError {
+				// For error cases, we need to capture the output before it exits
+				cmd.SetErr(b)
+				err = cmd.Execute()
+				// We expect an error, but in our mocked environment it won't actually exit
+			} else {
+				err = cmd.Execute()
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+
+			out, err := io.ReadAll(b)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if string(out) != tc.expectedString {
+				t.Fatalf("expected \"%s\" got \"%s\"",
+					tc.expectedString,
+					string(out))
+			}
+		})
 	}
 }

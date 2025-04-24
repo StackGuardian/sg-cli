@@ -1,4 +1,4 @@
-package artifacts
+package tests
 
 import (
 	"bytes"
@@ -8,25 +8,12 @@ import (
 	"reflect"
 	"testing"
 
+	artifactscmd "github.com/StackGuardian/sg-cli/cmd/artifacts"
 	api "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	option "github.com/StackGuardian/sg-sdk-go/option"
 	"github.com/stretchr/testify/mock"
 )
-
-type mockSGSdkClient struct {
-	mock.Mock
-	response []byte
-}
-
-func (m *mockSGSdkClient) RoundTrip(request *http.Request) (*http.Response, error) {
-
-	return &http.Response{
-		Body:       io.NopCloser(bytes.NewReader(m.response)),
-		Status:     http.StatusText(http.StatusOK),
-		StatusCode: http.StatusOK,
-	}, nil
-}
 
 func TestArtifactsList(t *testing.T) {
 	var successfulArtifactsListExpected api.GeneratedWorkflowListAllArtifactsResponse
@@ -63,7 +50,7 @@ func TestArtifactsList(t *testing.T) {
 		mockClient := &mockSGSdkClient{response: tc.expectedByte}
 		mockClient.On("RoundTrip", mock.AnythingOfType("*http.Request")).Return(&http.Response{}, nil)
 		c := client.NewClient(option.WithHTTPClient(&http.Client{Transport: mockClient}))
-		cmd := NewArtifactsCmd(c)
+		cmd := artifactscmd.NewArtifactsCmd(c)
 		cmd.SetArgs([]string{
 			"list",
 			"--org", "not-an-actual-org",

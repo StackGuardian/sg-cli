@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	sggosdk "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +25,7 @@ func NewListCmd(c *client.Client) *cobra.Command {
 				context.Background(),
 				cmd.Parent().Flags().Lookup("org").Value.String(),
 				cmd.Parent().Flags().Lookup("workflow-group").Value.String(),
+				&sggosdk.ListAllWorkflowsRequest{},
 			)
 			if err != nil {
 				cmd.Println(err)

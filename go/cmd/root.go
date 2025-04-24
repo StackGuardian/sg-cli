@@ -13,8 +13,9 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "sg-cli",
-	Short: "sg-cli is CLI command for managing resources on Stackguardian platform.",
+	Use:     "sg-cli",
+	Version: "2.1.0",
+	Short:   "sg-cli is CLI command for managing resources on Stackguardian platform.",
 	Long: `sg-cli is CLI command for managing resources on Stackguardian platform.
 More information available at: https://docs.qa.stackguardian.io/docs/`,
 }
