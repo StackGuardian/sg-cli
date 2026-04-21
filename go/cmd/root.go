@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/StackGuardian/sg-cli/cmd/artifacts"
+	"github.com/StackGuardian/sg-cli/cmd/gitscan"
 	"github.com/StackGuardian/sg-cli/cmd/stack"
 	workflow "github.com/StackGuardian/sg-cli/cmd/workflow"
 	"github.com/StackGuardian/sg-sdk-go/client"
@@ -42,4 +43,5 @@ func init() {
 	rootCmd.AddCommand(workflow.NewWorkflowCmd(c))
 	rootCmd.AddCommand(stack.NewStackCmd(c))
 	rootCmd.AddCommand(artifacts.NewArtifactsCmd(c))
+	rootCmd.AddCommand(gitscan.NewGitScanCmd())
 }
