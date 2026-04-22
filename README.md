@@ -1,5 +1,10 @@
 ## StackGuardian CLI (sg-cli)
 
+> **Note:** This repository hosts release binaries only. The source code is
+> maintained in a private repository. Issues, pull requests, and discussions
+> are not monitored here — please reach out via [support@stackguardian.io](mailto:support@stackguardian.io)
+> or your usual support channel.
+
 ### 1: Setup
 
 Required environment variables:
