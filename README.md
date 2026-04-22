@@ -427,3 +427,5 @@ On launch you will be prompted for your **org** and **workflow group**, which ar
 - **Switch Context** — change org / workflow group mid-session
 
 Navigation: arrow keys to move, Enter to select, Ctrl+C or `q` to go back / exit.
+
+<img width="403" height="305" alt="image" src="https://github.com/user-attachments/assets/da7a48ed-f10a-4c46-be4f-748978db814e" />
