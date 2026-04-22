@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -101,6 +102,29 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 	return createCmd
 }
 
+func cmdPrintln(cmd *cobra.Command, v interface{}) {
+	if cmd != nil {
+		cmd.Println(v)
+	} else {
+		fmt.Println(v)
+	}
+}
+
+// RunCreate is the public entry point for interactive/programmatic use.
+func RunCreate(c *client.Client, opts *RunOptions) {
+	const url = "https://app.stackguardian.io/orchestrator"
+	payload, err := os.ReadFile(opts.Payload)
+	if err != nil {
+		output.Error(err.Error())
+		return
+	}
+	if opts.Bulk {
+		runBulkCreate(nil, c, payload, opts, url)
+	} else {
+		runSingleCreate(nil, c, payload, opts, url)
+	}
+}
+
 func runBulkCreate(cmd *cobra.Command, c *client.Client, payload []byte, opts *RunOptions, dashboardURL string) {
 	var createBulkWorkflowRequest []BulkWorkflow
 	if err := json.Unmarshal(payload, &createBulkWorkflowRequest); err != nil {
@@ -169,7 +193,7 @@ func runBulkCreate(cmd *cobra.Command, c *client.Client, payload []byte, opts *R
 				continue
 			}
 			if opts.OutputJson {
-				cmd.Println(updateResponse)
+				cmdPrintln(cmd, updateResponse)
 			}
 			output.Success("Workflow updated successfully.")
 			handleTfState(cmd, &bulkWorkflow, opts)
@@ -177,7 +201,7 @@ func runBulkCreate(cmd *cobra.Command, c *client.Client, payload []byte, opts *R
 		}
 
 		if opts.OutputJson {
-			cmd.Println(response)
+			cmdPrintln(cmd, response)
 		}
 		output.Success("Workflow created successfully.")
 		handleTfState(cmd, &bulkWorkflow, opts)
@@ -216,7 +240,7 @@ func runWorkflow(cmd *cobra.Command, c *client.Client, bulkWorkflow *BulkWorkflo
 		return
 	}
 	if opts.OutputJson {
-		cmd.Println(runResponse)
+		cmdPrintln(cmd, runResponse)
 	}
 	output.Success("Workflow run created successfully.")
 	output.URL("View run at:", dashboardURL+"/orgs/"+opts.Org+"/wfgrps/"+wfGrp+"/wfs/"+bulkWorkflow.ResourceName.Value+"?tab=runs")
@@ -269,7 +293,7 @@ func runSingleCreate(cmd *cobra.Command, c *client.Client, payload []byte, opts 
 			os.Exit(1)
 		}
 		if opts.OutputJson {
-			cmd.Println(response)
+			cmdPrintln(cmd, response)
 		}
 		output.Success("Workflow run created successfully.")
 		output.URL("View run at:", dashboardURL+"/orgs/"+opts.Org+"/wfgrps/"+opts.WfgGrp+"/wfs/"+createWorkflowRequest.ResourceName.Value+"?tab=runs")
@@ -285,7 +309,7 @@ func runSingleCreate(cmd *cobra.Command, c *client.Client, payload []byte, opts 
 			os.Exit(1)
 		}
 		if opts.OutputJson {
-			cmd.Println(response)
+			cmdPrintln(cmd, response)
 		}
 		output.Success("Workflow created successfully.")
 	}
@@ -304,7 +328,7 @@ func performPreExecutionFlagChecks(cmd *cobra.Command, payload *sggosdk.Workflow
 			os.Exit(1)
 		}
 		output.Section("Payload Preview")
-		cmd.Println(string(requestJson))
+		cmdPrintln(cmd, string(requestJson))
 		if opts.DryRun {
 			os.Exit(0)
 		}

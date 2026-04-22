@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/StackGuardian/sg-cli/cmd/gitscan/scan"
+	wfcreate "github.com/StackGuardian/sg-cli/cmd/workflow/create"
 	"github.com/StackGuardian/sg-cli/cmd/output"
 	"github.com/StackGuardian/sg-cli/cmd/tui"
 	sggosdk "github.com/StackGuardian/sg-sdk-go"
@@ -561,12 +562,23 @@ func showWorkflowDetail(response *sggosdk.WorkflowGetResponse, org, wfGrp string
 }
 
 func (s *session) workflowCreate() {
+	// Step 1: pick mode
+	mode, err := tui.NewPicker("Create Workflow", contextLabel(s.org, s.wfGrp), []tui.Item{
+		{ID: "single", Label: "single", Description: "Create one workflow from a JSON payload file"},
+		{ID: "bulk",   Label: "bulk",   Description: "Create many workflows from a JSON array file (e.g. from git-scan)"},
+		{ID: "back",   Label: "← back", Description: "Return to workflow menu"},
+	})
+	if err != nil || mode == "back" {
+		return
+	}
+
+	// Step 2: collect options
 	var payloadPath string
 	var patchPayload string
 	var runAfter bool
 	var dryRun bool
 
-	err := huh.NewForm(
+	err = huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Payload file path").
@@ -576,7 +588,7 @@ func (s *session) workflowCreate() {
 					if v == "" {
 						return fmt.Errorf("payload path is required")
 					}
-					if _, err := os.Stat(v); err != nil {
+					if _, statErr := os.Stat(v); statErr != nil {
 						return fmt.Errorf("file not found: %s", v)
 					}
 					return nil
@@ -602,29 +614,19 @@ func (s *session) workflowCreate() {
 		return
 	}
 
-	hint := fmt.Sprintf("sg-cli workflow create --org %s --workflow-group %s %s", s.org, s.wfGrp, payloadPath)
-	if runAfter {
-		hint += " --run"
+	// Step 3: run
+	clearScreen()
+	fmt.Println()
+	opts := &wfcreate.RunOptions{
+		Org:          s.org,
+		WfgGrp:       s.wfGrp,
+		Payload:      payloadPath,
+		PatchPayload: patchPayload,
+		Run:          runAfter,
+		DryRun:       dryRun,
+		Bulk:         mode == "bulk",
 	}
-	if dryRun {
-		hint += " --dry-run"
-	}
-	if patchPayload != "" {
-		hint += fmt.Sprintf(" --patch-payload '%s'", patchPayload)
-	}
-
-	lines := []string{
-		cardSuccessTitle.Render("✓  Ready to create"),
-		"",
-		kv("Payload",  payloadPath),
-		kv("Org",      s.org),
-		kv("Wf Group", s.wfGrp),
-		"",
-		cardLabelStyle.Render("Command:"),
-		"  " + lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Render(hint),
-	}
-	fmt.Println(cardStyle.Render(strings.Join(lines, "\n")))
-	fmt.Println(hintStyle.Render("  Copy and run the command above to execute."))
+	wfcreate.RunCreate(s.client, opts)
 	fmt.Println()
 
 	_ = huh.NewForm(huh.NewGroup(
