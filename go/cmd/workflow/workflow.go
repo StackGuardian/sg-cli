@@ -1,8 +1,6 @@
 package workflow
 
 import (
-	"fmt"
-
 	"github.com/StackGuardian/sg-cli/cmd/workflow/apply"
 	"github.com/StackGuardian/sg-cli/cmd/workflow/create"
 	"github.com/StackGuardian/sg-cli/cmd/workflow/delete"
@@ -14,23 +12,13 @@ import (
 )
 
 func NewWorkflowCmd(c *client.Client) *cobra.Command {
-	// workflowCmd represents the workflow command
 	var workflowCmd = &cobra.Command{
 		Use:   "workflow",
 		Short: "Manage workflows",
-		Long:  `Manage workflows in Stackguardian platform.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(`Sub-commands:
-  create      Create new workflow
-  delete      Delete the workflow from workflow group
-  apply       Execute "Apply" on existing workflow
-  destroy     Execute "Destroy" on existing workflow
-  read        Read, get details of a workflow
-  list        List workflows`)
-		},
+		Long:  "Manage workflows in the StackGuardian platform.",
 	}
 
-	workflowCmd.PersistentFlags().String("org", "", "The organization name on Stackguardian platform.")
+	workflowCmd.PersistentFlags().String("org", "", "The organization name on StackGuardian platform.")
 	workflowCmd.MarkPersistentFlagRequired("org")
 
 	workflowCmd.PersistentFlags().String("workflow-group", "", "The workflow group under the organization.")

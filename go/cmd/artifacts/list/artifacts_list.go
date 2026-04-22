@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/StackGuardian/sg-cli/cmd/output"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	"github.com/spf13/cobra"
 )
@@ -15,35 +16,40 @@ type RunOptions struct {
 
 func NewListCmd(c *client.Client) *cobra.Command {
 	opts := &RunOptions{}
-	// listCmd represents the list command
+
 	var listCmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Artifacts",
-		Long:  `List Artifacts`,
+		Short: "List artifacts for a workflow",
+		Long:  "List all artifacts produced by a workflow.",
 		Run: func(cmd *cobra.Command, args []string) {
-			response, err := c.Workflows.ListAllWorkflowArtifacts(
-				context.Background(),
-				cmd.Parent().Flags().Lookup("org").Value.String(),
-				cmd.Parent().Flags().Lookup("workflow-id").Value.String(),
-				cmd.Parent().Flags().Lookup("workflow-group").Value.String(),
-			)
-			if err != nil {
-				cmd.PrintErrln("== Failed To List All Artifacts From Workflow ==")
-				if strings.Contains(err.Error(), "the server responded with nothing") {
-					cmd.PrintErrln("No artifacts found for this workflow")
-					os.Exit(-1)
-				}
-				cmd.Println(err)
-				os.Exit(-1)
-			}
+			org := cmd.Parent().Flags().Lookup("org").Value.String()
+			wfId := cmd.Parent().Flags().Lookup("workflow-id").Value.String()
+			wfGrp := cmd.Parent().Flags().Lookup("workflow-group").Value.String()
 
-			if opts.OutputJson {
-				cmd.Println(response)
+			var response interface{}
+			err := output.WithSpinner("Fetching artifacts...", func() error {
+				var apiErr error
+				response, apiErr = c.Workflows.ListAllWorkflowArtifacts(
+					context.Background(),
+					org,
+					wfId,
+					wfGrp,
+				)
+				return apiErr
+			})
+			if err != nil {
+				if strings.Contains(err.Error(), "the server responded with nothing") {
+					output.Warning("No artifacts found for this workflow.")
+					os.Exit(0)
+				}
+				output.Error("Failed to list artifacts: " + err.Error())
+				os.Exit(1)
 			}
 
 			cmd.Println(response)
 		},
 	}
-	listCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output execution response as json to STDIN.")
+
+	listCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output API response as JSON.")
 	return listCmd
 }

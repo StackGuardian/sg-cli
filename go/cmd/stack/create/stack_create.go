@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/StackGuardian/sg-cli/cmd/output"
 	"github.com/StackGuardian/sg-cli/utilities"
 	sggosdk "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
@@ -26,11 +27,11 @@ type RunOptions struct {
 
 func NewCreateCmd(c *client.Client) *cobra.Command {
 	opts := &RunOptions{}
-	// createCmd represents the create command
+
 	var createCmd = &cobra.Command{
-		Use:   "create",
-		Short: "Create new stack",
-		Long:  `Create new stack in the specified organization and workflow group.`,
+		Use:   "create [payload.json]",
+		Short: "Create a new stack",
+		Long:  "Create a new stack from a JSON payload file.",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			opts.Org = cmd.Parent().PersistentFlags().Lookup("org").Value.String()
@@ -39,102 +40,79 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 
 			payload, err := os.ReadFile(opts.Payload)
 			if err != nil {
-				cmd.PrintErrln(err)
+				output.Error(err.Error())
+				os.Exit(1)
 			}
 
 			var createStackRequest *sggosdk.Stack
 			if opts.PatchPayload != "" {
-				err := json.Unmarshal(
-					[]byte(
-						utilities.PatchJSON(string(payload), opts.PatchPayload),
-					),
-					&createStackRequest)
-				if err != nil {
-					cmd.Printf("Error during patching Stack payload: %s\n", err)
-					os.Exit(-1)
+				if err := json.Unmarshal([]byte(utilities.PatchJSON(string(payload), opts.PatchPayload)), &createStackRequest); err != nil {
+					output.Error("Error patching stack payload: " + err.Error())
+					os.Exit(1)
 				}
 			} else {
-				err := json.Unmarshal(
-					payload,
-					&createStackRequest)
-				if err != nil {
-					cmd.Printf("Error while unmarshalling Stack payload: %s\n", err)
-					os.Exit(-1)
+				if err := json.Unmarshal(payload, &createStackRequest); err != nil {
+					output.Error("Error reading stack payload: " + err.Error())
+					os.Exit(1)
 				}
-			}
-			//Run on create
-			if opts.Run {
-				createStackRequest.RunOnCreate = sggosdk.Bool(true)
-			} else {
-				createStackRequest.RunOnCreate = sggosdk.Bool(false)
 			}
 
-			// Perform actions based on the set flags
+			createStackRequest.RunOnCreate = sggosdk.Bool(opts.Run)
+
 			if err := performPreExecutionFlagChecks(cmd, createStackRequest, opts); err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(-1)
+				output.Error(err.Error())
+				os.Exit(1)
 			}
 
-			response, err := c.Stacks.CreateStack(
-				context.Background(),
-				opts.Org,
-				opts.WfgGrp,
-				createStackRequest,
-			)
+			var response interface{}
+			err = output.WithSpinner("Creating stack...", func() error {
+				var e error
+				response, e = c.Stacks.CreateStack(context.Background(), opts.Org, opts.WfgGrp, createStackRequest)
+				return e
+			})
 			if err != nil {
 				if strings.Contains(err.Error(), "cannot unmarshal") {
-					cmd.Println("Stack was created successfully but an error occured while reading the response JSON.")
-					os.Exit(-1)
+					output.Success("Stack created successfully.")
+					output.Warning("Could not parse the API response JSON.")
+					os.Exit(0)
 				}
-				cmd.PrintErrln("== Failed To Create Stack ==")
-				cmd.PrintErrln(err)
-				os.Exit(-1)
+				output.Error("Failed to create stack: " + err.Error())
+				os.Exit(1)
 			}
+
 			if opts.OutputJson {
 				cmd.Println(response)
 			}
-			cmd.Println("Stack created successfully.")
-
+			output.Success("Stack created successfully.")
 		},
 	}
 
-	// Define the flags for the command
-
-	createCmd.Flags().StringVar(&opts.PatchPayload, "patch-payload", "", "Patch original payload.json input. Add or replace values. Requires valid JSON input.")
-
-	createCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output execution response as json to STDIN.")
-
-	createCmd.Flags().BoolVar(&opts.Preview, "preview", false, "Preview payload content before creating. Execution will not pause.")
-
-	createCmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Similar to --preview. But execution will stop, nothing will be created.")
-
-	createCmd.Flags().BoolVar(&opts.Run, "run", false, "Executes the Stack.")
+	createCmd.Flags().StringVar(&opts.PatchPayload, "patch-payload", "", "Merge a JSON patch over the payload before applying.")
+	createCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output API response as JSON.")
+	createCmd.Flags().BoolVar(&opts.Preview, "preview", false, "Preview the payload before creating (execution continues).")
+	createCmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Preview the payload and exit without creating.")
+	createCmd.Flags().BoolVar(&opts.Run, "run", false, "Trigger a run immediately after creation.")
 
 	return createCmd
 }
 
-// performPreExecutionFlagChecks performs pre-execution flag checks and returns the payload
+// performPreExecutionFlagChecks validates and optionally previews the stack payload.
 func performPreExecutionFlagChecks(cmd *cobra.Command, payload *sggosdk.Stack, opts *RunOptions) error {
-
 	if payload.ResourceName == nil || payload.ResourceName.Value == "" {
-		return errors.New(">> [ERROR] Stack ResourceName is required in object payload, skipping")
+		return errors.New("stack ResourceName is required in the payload")
 	}
 
-	if opts.DryRun {
+	if opts.DryRun || opts.Preview {
 		requestJson, err := json.MarshalIndent(payload, "", "    ")
 		if err != nil {
-			cmd.PrintErrln(err)
-			os.Exit(-1)
+			output.Error(err.Error())
+			os.Exit(1)
 		}
+		output.Section("Payload Preview")
 		cmd.Println(string(requestJson))
-		os.Exit(-1)
-	} else if opts.Preview {
-		requestJson, err := json.MarshalIndent(payload, "", "    ")
-		if err != nil {
-			cmd.PrintErrln(err)
-			os.Exit(-1)
+		if opts.DryRun {
+			os.Exit(0)
 		}
-		cmd.Println(string(requestJson))
 	}
 	return nil
 }

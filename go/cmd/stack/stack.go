@@ -1,8 +1,6 @@
 package stack
 
 import (
-	"fmt"
-
 	"github.com/StackGuardian/sg-cli/cmd/stack/apply"
 	"github.com/StackGuardian/sg-cli/cmd/stack/create"
 	"github.com/StackGuardian/sg-cli/cmd/stack/delete"
@@ -13,22 +11,13 @@ import (
 )
 
 func NewStackCmd(c *client.Client) *cobra.Command {
-	// stackCmd represents the Stack command
 	var stackCmd = &cobra.Command{
 		Use:   "stack",
 		Short: "Manage stacks",
-		Long:  `Manage stacks in Stackguardian platform.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(`Sub-commands:
-  create      Create new stack
-  delete      Deletes an existing stack
-  apply       Execute "Apply" on existing stack
-  destroy     Execute "Destroy" on existing stack
-  outputs     Get outputs from stack`)
-		},
+		Long:  "Manage stacks in the StackGuardian platform.",
 	}
 
-	stackCmd.PersistentFlags().String("org", "", "The organization name on Stackguardian platform.")
+	stackCmd.PersistentFlags().String("org", "", "The organization name on StackGuardian platform.")
 	stackCmd.MarkPersistentFlagRequired("org")
 
 	stackCmd.PersistentFlags().String("workflow-group", "", "The workflow group under the organization.")

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/StackGuardian/sg-cli/cmd/output"
+	"github.com/StackGuardian/sg-cli/cmd/tui"
 	sggosdk "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	"github.com/spf13/cobra"
@@ -21,38 +23,84 @@ type RunOptions struct {
 
 func NewDeleteCmd(c *client.Client) *cobra.Command {
 	opts := &RunOptions{}
-	// deleteCmd represents the delete command
+
 	var deleteCmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete the Stack from workflow group",
-		Long:  `Delete the Stack from workflow group. Use option --force-delete to delete the Stack along with all of its workflows.`,
+		Short: "Delete a stack from a workflow group",
+		Long:  "Permanently delete a stack. If --stack-id is omitted, an interactive picker opens. Use --force-delete to also remove all workflows within the stack.",
 		Run: func(cmd *cobra.Command, args []string) {
 			opts.Org = cmd.Parent().PersistentFlags().Lookup("org").Value.String()
 			opts.WfgGrp = cmd.Parent().PersistentFlags().Lookup("workflow-group").Value.String()
 
-			response, err := executeStackDeletion(c, cmd, opts)
+			if opts.StackId == "" {
+				id, err := pickStack(c, opts.Org, opts.WfgGrp, "Delete Stack")
+				if err != nil {
+					output.Error(err.Error())
+					os.Exit(1)
+				}
+				opts.StackId = id
+			}
+
+			var response interface{}
+			err := output.WithSpinner("Deleting stack "+opts.StackId+"...", func() error {
+				var apiErr error
+				response, apiErr = executeStackDeletion(c, cmd, opts)
+				return apiErr
+			})
 			if err != nil {
-				cmd.Println(err)
-				os.Exit(-1)
+				output.Error(err.Error())
+				os.Exit(1)
 			}
 
 			if opts.OutputJson && response != nil {
 				cmd.Println(response)
 			}
-			cmd.Println("Stack deleted successfully.")
+
+			output.Success("Stack deleted successfully.")
 		},
 	}
 
-	deleteCmd.Flags().StringVar(&opts.StackId, "stack-id", "", "The Stack ID to delete.")
-	deleteCmd.Flags().BoolVar(&opts.ForceDelete, "force-delete", false, "The force-delete flag will delete the Stack along with all of its workflows. Use with caution.")
-	deleteCmd.MarkFlagRequired("stack-id")
-
-	deleteCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output execution response as json to STDIN.")
+	deleteCmd.Flags().StringVar(&opts.StackId, "stack-id", "", "The stack ID to delete. Omit to pick interactively.")
+	deleteCmd.Flags().BoolVar(&opts.ForceDelete, "force-delete", false, "Delete the stack along with all of its workflows.")
+	deleteCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output API response as JSON.")
 
 	return deleteCmd
 }
 
-// deleteStack attempts to delete a stack and returns the response and any error
+func pickStack(c *client.Client, org, wfGrp, title string) (string, error) {
+	var response *sggosdk.GeneratedStackListAllResponse
+	err := output.WithSpinner("Fetching stacks...", func() error {
+		var apiErr error
+		response, apiErr = c.Stacks.ListAllStacks(
+			context.Background(),
+			org,
+			wfGrp,
+			&sggosdk.ListAllStacksRequest{},
+		)
+		return apiErr
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(response.Msg) == 0 {
+		return "", nil
+	}
+
+	items := make([]tui.Item, len(response.Msg))
+	for i, s := range response.Msg {
+		items[i] = tui.Item{
+			ID:          s.ResourceName,
+			Label:       s.ResourceName,
+			Description: s.Description,
+			Badge:       s.LatestWfStatus,
+		}
+	}
+
+	subtitle := org + " / " + wfGrp
+	return tui.NewPicker(title, subtitle, items)
+}
+
 func deleteStack(c *client.Client, opts *RunOptions) (interface{}, error) {
 	return c.Stacks.DeleteStack(
 		context.Background(),
@@ -62,7 +110,6 @@ func deleteStack(c *client.Client, opts *RunOptions) (interface{}, error) {
 	)
 }
 
-// deleteAllStackWorkflows will find and delete all the Workflows that are part of this Stack
 func deleteAllStackWorkflows(c *client.Client, cmd *cobra.Command, opts *RunOptions) {
 	stackWorkflows, err := c.StackWorkflows.ListAllStackWorkflows(
 		context.Background(),
@@ -72,9 +119,8 @@ func deleteAllStackWorkflows(c *client.Client, cmd *cobra.Command, opts *RunOpti
 		&sggosdk.ListAllStackWorkflowsRequest{},
 	)
 	if err != nil {
-		cmd.Println("An error occured while listing all the Stack Workflows to delete.")
-		cmd.Println(err)
-		os.Exit(-1)
+		output.Error("Failed to list stack workflows: " + err.Error())
+		os.Exit(1)
 	}
 	for _, stackWf := range stackWorkflows.Msg {
 		stackWfResourceIdSplit := strings.Split(stackWf.ResourceId, "/")
@@ -86,37 +132,30 @@ func deleteAllStackWorkflows(c *client.Client, cmd *cobra.Command, opts *RunOpti
 			opts.WfgGrp,
 		)
 		if err != nil {
-			cmd.Println("An error occured while deleting Stack workflow " + stackWf.ResourceId)
-			cmd.Println(err)
-			os.Exit(-1)
+			output.Error("Failed to delete stack workflow " + stackWf.ResourceId + ": " + err.Error())
+			os.Exit(1)
 		}
-		cmd.Println("Stack workflow " + stackWf.ResourceId + " deleted successfully.")
+		output.Info("Deleted stack workflow: " + stackWf.ResourceId)
 	}
 }
 
-// executeStackDeletion handles the stack deletion logic and returns the response and any errors
 func executeStackDeletion(c *client.Client, cmd *cobra.Command, opts *RunOptions) (interface{}, error) {
 	response, err := deleteStack(c, opts)
 	if err == nil {
 		return response, nil
 	}
 
-	// Check if error is due to non-empty stack
 	if !strings.Contains(err.Error(), "Stack is not empty") {
 		return nil, err
 	}
 
-	// Handle non-empty stack error
 	if !opts.ForceDelete {
-		return nil, fmt.Errorf("this stack cannot be deleted since it contains workflows.\n" +
-			"You can use the --force-delete flag to force the deletion of the stack along with all of its workflows")
+		return nil, fmt.Errorf("stack contains workflows — use --force-delete to remove them first")
 	}
 
-	// Force delete is enabled, delete all workflows first
-	cmd.Println("Force deletion is enabled. Deleting the Stack's Workflows...")
+	output.Warning("Force deletion enabled. Removing all workflows in the stack first...")
 	deleteAllStackWorkflows(c, cmd, opts)
-	cmd.Println("All the Workflows in the Stack have been deleted. Deleting the Stack..")
+	output.Info("All workflows deleted. Removing the stack...")
 
-	// Try deleting the stack again
 	return deleteStack(c, opts)
 }

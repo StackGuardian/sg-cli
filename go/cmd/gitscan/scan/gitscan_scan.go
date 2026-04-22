@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/StackGuardian/sg-cli/cmd/output"
+	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 )
 
@@ -182,27 +184,34 @@ func NewScanCmd() *cobra.Command {
 		Long: `Scan a GitHub or GitLab organization for Terraform repositories and generate
 an sg-payload.json file for bulk workflow creation.
 
+If required flags (--provider, --token) are omitted, an interactive wizard will guide you.
+
 Examples:
   sg-cli git-scan scan --provider github --token ghp_xxx --org my-org
   sg-cli git-scan scan --provider gitlab --token glpat-xxx --org my-group
   sg-cli git-scan scan --provider github --token ghp_xxx --org my-org --max-repos 50 --output export/sg-payload.json`,
 		Run: func(cmd *cobra.Command, args []string) {
+			// If required flags are missing, launch the interactive wizard
+			if opts.Provider == "" || opts.Token == "" {
+				if err := runWizard(opts); err != nil {
+					output.Error("Wizard cancelled or failed: " + err.Error())
+					os.Exit(1)
+				}
+			}
 			run(cmd, opts)
 		},
 	}
 
 	// Required
-	cmd.Flags().StringVarP(&opts.Provider, "provider", "p", "", "VCS provider: github or gitlab (required)")
-	cmd.Flags().StringVarP(&opts.Token, "token", "t", "", "VCS access token — GitHub PAT or GitLab PAT (required)")
-	cmd.MarkFlagRequired("provider")
-	cmd.MarkFlagRequired("token")
+	cmd.Flags().StringVarP(&opts.Provider, "provider", "p", "", "VCS provider: github or gitlab")
+	cmd.Flags().StringVarP(&opts.Token, "token", "t", "", "VCS access token — GitHub PAT or GitLab PAT")
 
 	// Target
 	cmd.Flags().StringVarP(&opts.Org, "org", "o", "", "GitHub organization or GitLab group to scan")
 	cmd.Flags().StringVarP(&opts.User, "user", "u", "", "Scan repos for a specific user instead of an org/group")
 
 	// Filtering
-	cmd.Flags().IntVarP(&opts.MaxRepos, "max-repos", "m", 0, "Maximum number of repositories to scan (0 = no limit)")
+	cmd.Flags().IntVarP(&opts.MaxRepos, "max-repos", "m", 0, "Maximum repositories to scan (0 = no limit)")
 	cmd.Flags().BoolVar(&opts.IncludeArchived, "include-archived", false, "Include archived repositories")
 	cmd.Flags().BoolVar(&opts.IncludeForks, "include-forks", false, "Include forked repositories")
 
@@ -220,6 +229,116 @@ Examples:
 }
 
 // ---------------------------------------------------------------------------
+// runWizard — interactive Huh form for flags not supplied on the command line
+// ---------------------------------------------------------------------------
+
+func runWizard(opts *RunOptions) error {
+	var provider string
+	var token string
+	var target string // "org" or "user"
+	var orgOrUser string
+	var maxReposStr string
+	var outputPath string
+	var managedState bool
+
+	// Set defaults
+	if opts.WfGrp == "" {
+		opts.WfGrp = "imported-workflows"
+	}
+	if opts.Output == "" {
+		outputPath = "sg-payload.json"
+	} else {
+		outputPath = opts.Output
+	}
+	target = "org"
+	maxReposStr = "0"
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("VCS Provider").
+				Description("Which version control platform do you want to scan?").
+				Options(
+					huh.NewOption("GitHub", "github"),
+					huh.NewOption("GitLab", "gitlab"),
+				).
+				Value(&provider),
+
+			huh.NewInput().
+				Title("Access Token").
+				Description("GitHub PAT (ghp_...) or GitLab PAT (glpat-...)").
+				Password(true).
+				Validate(func(s string) error {
+					if strings.TrimSpace(s) == "" {
+						return fmt.Errorf("token is required")
+					}
+					return nil
+				}).
+				Value(&token),
+		),
+
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Scan target").
+				Description("Scan an organization/group or a specific user?").
+				Options(
+					huh.NewOption("Organization / Group", "org"),
+					huh.NewOption("User", "user"),
+				).
+				Value(&target),
+
+			huh.NewInput().
+				Title("Organization / User name").
+				Description("Leave blank to scan all repos accessible to the token").
+				Value(&orgOrUser),
+		),
+
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Output file").
+				Description("Where to write the generated sg-payload.json").
+				Value(&outputPath),
+
+			huh.NewInput().
+				Title("Max repositories").
+				Description("Maximum repos to scan (0 = no limit)").
+				Value(&maxReposStr),
+
+			huh.NewConfirm().
+				Title("Enable SG-managed Terraform state?").
+				Value(&managedState),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return err
+	}
+
+	// Apply wizard values to opts
+	opts.Provider = provider
+	opts.Token = token
+	opts.ManagedState = managedState
+	opts.Output = outputPath
+
+	if target == "org" {
+		opts.Org = orgOrUser
+	} else {
+		opts.User = orgOrUser
+	}
+
+	if n, err := strconv.Atoi(strings.TrimSpace(maxReposStr)); err == nil {
+		opts.MaxRepos = n
+	}
+
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// RunScan is the public entry point for running a scan without a cobra.Command.
+func RunScan(opts *RunOptions) {
+	run(nil, opts)
+}
+
 // run — orchestrates discover → scan → transform → write
 // ---------------------------------------------------------------------------
 
@@ -229,11 +348,11 @@ func run(cmd *cobra.Command, opts *RunOptions) {
 	// 1. Discover repos
 	repos, err := discoverRepos(opts, logger)
 	if err != nil {
-		cmd.PrintErrln("Error discovering repositories:", err)
+		output.Error("Error discovering repositories: " + err.Error())
 		os.Exit(1)
 	}
 	if len(repos) == 0 {
-		cmd.PrintErrln("No repositories found. Check your token, org, and permissions.")
+		output.Error("No repositories found. Check your token, org, and permissions.")
 		os.Exit(0)
 	}
 
@@ -242,7 +361,7 @@ func run(cmd *cobra.Command, opts *RunOptions) {
 	logger.infof("Discovered %d repositories from %s", len(repos), opts.Provider)
 
 	if len(repos) == 0 {
-		cmd.PrintErrln("No repositories remain after filtering.")
+		output.Warning("No repositories remain after filtering.")
 		os.Exit(0)
 	}
 
@@ -271,7 +390,7 @@ func run(cmd *cobra.Command, opts *RunOptions) {
 	}
 
 	if len(results) == 0 {
-		cmd.PrintErrln("No Terraform projects found in any repository.")
+		output.Warning("No Terraform projects found in any repository.")
 		os.Exit(0)
 	}
 
@@ -293,25 +412,25 @@ func run(cmd *cobra.Command, opts *RunOptions) {
 	// 4. Write output
 	out, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		cmd.PrintErrln("Failed to marshal payload:", err)
+		output.Error("Failed to marshal payload: " + err.Error())
 		os.Exit(1)
 	}
 
 	outputPath := opts.Output
 	if dir := filepath.Dir(outputPath); dir != "." {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
-			cmd.PrintErrln("Failed to create output directory:", err)
+			output.Error("Failed to create output directory: " + err.Error())
 			os.Exit(1)
 		}
 	}
 
 	if err := os.WriteFile(outputPath, out, 0o644); err != nil {
-		cmd.PrintErrln("Failed to write output file:", err)
+		output.Error("Failed to write output file: " + err.Error())
 		os.Exit(1)
 	}
 
-	logger.infof("Generated %d workflow(s) → %s", len(payload), outputPath)
-	logger.infof("Next step: sg-cli workflow create --bulk --org \"<ORG>\" -- %s", outputPath)
+	output.Success(fmt.Sprintf("Generated %d workflow(s) → %s", len(payload), outputPath))
+	output.Info("Next step: sg-cli workflow create --bulk --org \"<ORG>\" -- " + outputPath)
 }
 
 // ---------------------------------------------------------------------------
@@ -384,7 +503,6 @@ func githubGet(path string, token string, params map[string]string) ([]byte, htt
 }
 
 func githubNextPage(linkHeader string) int {
-	// Link: <https://api.github.com/...?page=2>; rel="next", ...
 	for _, part := range strings.Split(linkHeader, ",") {
 		if strings.Contains(part, `rel="next"`) {
 			parts := strings.SplitN(strings.TrimSpace(part), ";", 2)
@@ -486,7 +604,6 @@ func githubGetFileTree(r repo, token string) ([]string, error) {
 	path := fmt.Sprintf("/repos/%s/%s/git/trees/%s", r.Owner, r.Name, ref)
 	body, _, err := githubGet(path+"?recursive=1", token, nil)
 	if err != nil {
-		// 404 / 409 (empty repo) — not an error, just no files
 		if strings.Contains(err.Error(), "HTTP 404") || strings.Contains(err.Error(), "HTTP 409") {
 			return nil, nil
 		}
@@ -574,10 +691,10 @@ func gitlabListRepos(opts *RunOptions, logger *logger) ([]repo, error) {
 
 	for {
 		params := map[string]string{
-			"per_page":      "100",
-			"page":          strconv.Itoa(page),
-			"order_by":      "last_activity_at",
-			"sort":          "desc",
+			"per_page": "100",
+			"page":     strconv.Itoa(page),
+			"order_by": "last_activity_at",
+			"sort":     "desc",
 		}
 
 		var path string
@@ -632,7 +749,6 @@ func gitlabFormatRepo(p map[string]interface{}) repo {
 		owner = parts[0]
 	}
 
-	// topics may be under "topics" or legacy "tag_list"
 	topics := stringSliceField(p, "topics")
 	if len(topics) == 0 {
 		topics = stringSliceField(p, "tag_list")
@@ -738,7 +854,6 @@ func detectTerraformDirs(fileTree []string) []tfProject {
 	for _, filePath := range fileTree {
 		parts := strings.Split(filePath, "/")
 
-		// skip excluded directories
 		excluded := false
 		for _, p := range parts {
 			if excludeDirs[p] {
@@ -791,37 +906,30 @@ func detectTerraformDirs(fileTree []string) []tfProject {
 // ---------------------------------------------------------------------------
 
 func buildWorkflow(r repo, proj tfProject, opts *RunOptions) workflowEntry {
-	// Resource name
 	resourceName := r.Name
 	if proj.Path != "" && proj.Path != "." {
 		resourceName = r.Name + "-" + strings.ReplaceAll(proj.Path, "/", "-")
 	}
 
-	// Description
 	description := r.Description
 	if description == "" {
 		description = "Workflow for " + r.FullName
 	}
 
-	// Tags
 	tags := append([]string{}, r.Topics...)
 	tags = append(tags, "terraform")
 	tags = dedupe(tags)
 
-	// VCS auth
 	auth := opts.VCSAuth
 	if !r.IsPrivate {
 		auth = ""
 	}
 
-	// Working dir
 	workingDir := proj.Path
 	if workingDir == "." {
 		workingDir = ""
 	}
 
-	// Deployment platform config — placeholder; user fills in integration ID.
-	// API requires at least one entry — emit a placeholder so the field is never empty.
 	deployConfig := []deploymentPlatformConfig{
 		{
 			Kind: "TERRAFORM_OTHER",
@@ -831,7 +939,6 @@ func buildWorkflow(r repo, proj tfProject, opts *RunOptions) workflowEntry {
 		},
 	}
 
-	// TFVars extra CLI args
 	extraCLIArgs := ""
 	if len(proj.TFVarsFiles) > 0 {
 		extraCLIArgs = "-var-file=" + proj.TFVarsFiles[0]
@@ -839,7 +946,7 @@ func buildWorkflow(r repo, proj tfProject, opts *RunOptions) workflowEntry {
 
 	tfConfig := terraformConfig{
 		ManagedTerraformState: opts.ManagedState,
-		TerraformVersion:      "1.5.0", // default; no HCL parsing without clone
+		TerraformVersion:      "1.5.0",
 		ApprovalPreApply:      true,
 		ExtraCLIArgs:          extraCLIArgs,
 	}
