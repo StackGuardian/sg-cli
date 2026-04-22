@@ -21,7 +21,7 @@ const pageSize = 8 // items visible per page (each item = 2 lines: label + desc)
 
 var (
 	pickerTitleStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#7C3AED")).
+				Foreground(lipgloss.Color("#88B7DA")).
 				Bold(true).
 				Padding(0, 1)
 
@@ -29,7 +29,7 @@ var (
 
 	pickerSelectedStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#F9FAFB")).
-				Background(lipgloss.Color("#7C3AED")).
+				Background(lipgloss.Color("#88B7DA")).
 				Bold(true).
 				Padding(0, 2)
 
@@ -188,7 +188,7 @@ func (m pickerModel) View() string {
 
 	// Brand line
 	brand := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
+		Foreground(lipgloss.Color("#88B7DA")).
 		Bold(true).
 		Render("StackGuardian")
 	brandLine := brand + lipgloss.NewStyle().Foreground(lipgloss.Color("#374151")).Render("  ·  sg-cli")
@@ -216,22 +216,59 @@ func (m pickerModel) View() string {
 		end = len(m.items)
 	}
 
+	// Determine if any visible item has a badge — use table layout only then
+	hasBadges := false
+	labelWidth := 4
+	badgeWidth := 0
+	for i := m.offset; i < end; i++ {
+		if m.items[i].Badge != "" {
+			hasBadges = true
+		}
+		if l := lipgloss.Width(m.items[i].Label); l > labelWidth {
+			labelWidth = l
+		}
+		if bw := lipgloss.Width(m.items[i].Badge); bw > badgeWidth {
+			badgeWidth = bw
+		}
+	}
+	if badgeWidth > 0 {
+		badgeWidth += 2 // brackets
+	}
+
 	for i := m.offset; i < end; i++ {
 		item := m.items[i]
-		badge := ""
-		if item.Badge != "" {
-			badge = " " + lipgloss.NewStyle().
-				Foreground(badgeColor(item.Badge)).
-				Render("["+item.Badge+"]")
-		}
 
-		if i == m.cursor {
-			b.WriteString(pickerSelectedStyle.Render("▶ "+item.Label) + badge + "\n")
+		if hasBadges {
+			// Table layout: name | badge | description all on one line
+			badgeStr := strings.Repeat(" ", badgeWidth)
+			if item.Badge != "" {
+				badgeStr = lipgloss.NewStyle().
+					Foreground(badgeColor(item.Badge)).
+					Width(badgeWidth).
+					Render("[" + item.Badge + "]")
+			}
+
+			nameWidth := labelWidth + 4 // padding for cursor prefix + spacing
+			if i == m.cursor {
+				b.WriteString(pickerSelectedStyle.Width(nameWidth).Render("▶ " + item.Label))
+			} else {
+				b.WriteString(pickerItemStyle.Width(nameWidth).Render("  " + item.Label))
+			}
+			b.WriteString("  " + badgeStr)
+			if item.Description != "" {
+				b.WriteString("  " + pickerDescStyle.Render(item.Description))
+			}
+			b.WriteString("\n")
 		} else {
-			b.WriteString(pickerItemStyle.Render("  "+item.Label) + badge + "\n")
-		}
-		if item.Description != "" {
-			b.WriteString(pickerDescStyle.Render(item.Description) + "\n")
+			// Simple layout: name on one line, description indented below
+			if i == m.cursor {
+				b.WriteString(pickerSelectedStyle.Render("▶ " + item.Label) + "\n")
+			} else {
+				b.WriteString(pickerItemStyle.Render("  " + item.Label) + "\n")
+			}
+			if item.Description != "" {
+				b.WriteString(pickerDescStyle.Render(item.Description) + "\n")
+			}
 		}
 	}
 
@@ -252,7 +289,7 @@ func (m pickerModel) View() string {
 
 	// Help bar
 	sep := lipgloss.NewStyle().Foreground(lipgloss.Color("#374151")).Render("  │  ")
-	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#A78BFA")).Bold(true)
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Bold(true)
 	actStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280"))
 
 	key := func(k, act string) string {

@@ -99,7 +99,7 @@ func styledHelp(cmd *cobra.Command, args []string) {
 		fmt.Println()
 		for _, sub := range cmd.Commands() {
 			if sub.IsAvailableCommand() {
-				name := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Bold(true).Width(16).Render(sub.Name())
+				name := lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Bold(true).Width(16).Render(sub.Name())
 				desc := output.Muted.Render(sub.Short)
 				fmt.Println("  " + name + desc)
 			}
@@ -160,7 +160,7 @@ func printFlags(usage string) {
 			// Split flag name from the rest
 			spaceIdx := strings.IndexAny(rest, " \t")
 			if spaceIdx >= 0 {
-				flagName := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Render(rest[:spaceIdx])
+				flagName := lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Render(rest[:spaceIdx])
 				fmt.Println(before + flagName + output.Muted.Render(rest[spaceIdx:]))
 				continue
 			}

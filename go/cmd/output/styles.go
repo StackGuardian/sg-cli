@@ -4,13 +4,13 @@ import "github.com/charmbracelet/lipgloss"
 
 var (
 	// Brand colors
-	colorPrimary = lipgloss.Color("#7C3AED") // StackGuardian purple
+	colorPrimary = lipgloss.Color("#88B7DA") // StackGuardian steel blue
 	colorSuccess = lipgloss.Color("#22C55E")
 	colorError   = lipgloss.Color("#EF4444")
 	colorWarning = lipgloss.Color("#F59E0B")
-	colorInfo    = lipgloss.Color("#3B82F6")
+	colorInfo    = lipgloss.Color("#88B7DA")
 	colorMuted   = lipgloss.Color("#6B7280")
-	colorURL     = lipgloss.Color("#60A5FA")
+	colorURL     = lipgloss.Color("#88B7DA")
 	colorWhite   = lipgloss.Color("#F9FAFB")
 
 	// Base text styles

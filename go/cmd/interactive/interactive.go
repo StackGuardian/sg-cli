@@ -27,6 +27,26 @@ func clearScreen() {
 	fmt.Print("\033[H\033[2J")
 }
 
+// newForm wraps huh.NewForm and pre-applies the StackGuardian theme.
+func newForm(groups ...*huh.Group) *huh.Form {
+	return huh.NewForm(groups...).WithTheme(sgTheme())
+}
+
+// sgTheme returns a huh theme using the StackGuardian steel-blue palette.
+func sgTheme() *huh.Theme {
+	t := huh.ThemeBase()
+	blue := lipgloss.Color("#88B7DA")
+	t.Focused.Title = lipgloss.NewStyle().Foreground(blue).Bold(true)
+	t.Focused.Base = lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.ThickBorder()).BorderLeft(true).BorderForeground(blue)
+	t.Focused.FocusedButton = lipgloss.NewStyle().Foreground(lipgloss.Color("#0D1117")).Background(blue).Bold(true).Padding(0, 1)
+	t.Focused.BlurredButton = lipgloss.NewStyle().Foreground(lipgloss.Color("#9CA3AF")).Padding(0, 1)
+	t.Blurred.Title = lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280"))
+	t.Blurred.Base = lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.HiddenBorder())
+	t.Blurred.FocusedButton = t.Focused.FocusedButton
+	t.Blurred.BlurredButton = t.Focused.BlurredButton
+	return t
+}
+
 // ---------------------------------------------------------------------------
 // Result card styles
 // ---------------------------------------------------------------------------
@@ -34,7 +54,7 @@ func clearScreen() {
 var (
 	cardStyle = lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#7C3AED")).
+			BorderForeground(lipgloss.Color("#88B7DA")).
 			Padding(1, 3).
 			MarginTop(1).
 			MarginBottom(1)
@@ -92,7 +112,7 @@ func showResultCard(title, resource, org, wfGrp, runURL string, succeeded bool) 
 	fmt.Println()
 
 	// Wait for enter
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title("").
 			Affirmative("Back to menu").
@@ -111,7 +131,7 @@ func showErrorCard(msg string) {
 	}
 	fmt.Println(cardStyle.Render(strings.Join(lines, "\n")))
 	fmt.Println()
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title("").
 			Affirmative("Back to menu").
@@ -131,7 +151,7 @@ func showDeletedCard(resource, resourceType string) {
 	fmt.Println(cardStyle.Render(strings.Join(lines, "\n")))
 	fmt.Println(hintStyle.Render("  Press enter to return to menu"))
 	fmt.Println()
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title("").
 			Affirmative("Back to menu").
@@ -224,10 +244,10 @@ func (s *session) ensureContext() error {
 	}
 
 	clearScreen()
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Bold(true).Render("Organisation & Workflow Group"))
+	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Bold(true).Render("Organisation & Workflow Group"))
 	fmt.Println()
 
-	return huh.NewForm(
+	return newForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Organisation").
@@ -355,7 +375,7 @@ func (s *session) workflowList() {
 		fmt.Println()
 
 		goBack := true
-		_ = huh.NewForm(huh.NewGroup(
+		_ = newForm(huh.NewGroup(
 			huh.NewConfirm().
 				Title("").
 				Affirmative("Back to list").
@@ -381,7 +401,7 @@ func (s *session) workflowAction(action string) {
 
 	// Confirm before executing
 	confirmed := false
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title(fmt.Sprintf("Run %s on  %s?", strings.ToUpper(action), wfId)).
 			Description(fmt.Sprintf("Org: %s   Wf Group: %s", s.org, s.wfGrp)).
@@ -434,7 +454,7 @@ func (s *session) workflowDelete() {
 	}
 
 	confirmed := false
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title("Delete  " + wfId + "?").
 			Description("This action is permanent and cannot be undone.").
@@ -541,7 +561,7 @@ func showWorkflowDetail(response *sggosdk.WorkflowGetResponse, org, wfGrp string
 
 	// "View raw JSON" or "Back to menu"
 	viewJSON := false
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title("").
 			Affirmative("Back to menu").
@@ -554,7 +574,7 @@ func showWorkflowDetail(response *sggosdk.WorkflowGetResponse, org, wfGrp string
 		if err == nil {
 			fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#9CA3AF")).Render(string(raw)))
 			fmt.Println()
-			_ = huh.NewForm(huh.NewGroup(
+			_ = newForm(huh.NewGroup(
 				huh.NewConfirm().Title("").Affirmative("Back to menu").Negative("").Value(new(bool)),
 			)).Run()
 		}
@@ -578,7 +598,7 @@ func (s *session) workflowCreate() {
 	var runAfter bool
 	var dryRun bool
 
-	err = huh.NewForm(
+	err = newForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Payload file path").
@@ -629,7 +649,7 @@ func (s *session) workflowCreate() {
 	wfcreate.RunCreate(s.client, opts)
 	fmt.Println()
 
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().Title("").Affirmative("Back to menu").Negative("Exit").Value(new(bool)),
 	)).Run()
 }
@@ -681,7 +701,7 @@ func (s *session) stackAction(action string) {
 	}
 
 	confirmed := false
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title(fmt.Sprintf("Run %s on  %s?", strings.ToUpper(action), stackId)).
 			Description(fmt.Sprintf("Org: %s   Wf Group: %s", s.org, s.wfGrp)).
@@ -728,7 +748,7 @@ func (s *session) stackDelete() {
 	}
 
 	confirmed := false
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().
 			Title("Delete  " + stackId + "?").
 			Description("This action is permanent and cannot be undone.").
@@ -785,7 +805,7 @@ func (s *session) stackOutputs() {
 	fmt.Println(response)
 	fmt.Println()
 
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().Title("").Affirmative("Back to menu").Negative("Exit").Value(new(bool)),
 	)).Run()
 }
@@ -793,7 +813,7 @@ func (s *session) stackOutputs() {
 func (s *session) stackCreate() {
 	var payloadPath string
 
-	err := huh.NewForm(huh.NewGroup(
+	err := newForm(huh.NewGroup(
 		huh.NewInput().
 			Title("Payload file path").
 			Description("Path to your stack JSON payload file").
@@ -822,13 +842,13 @@ func (s *session) stackCreate() {
 		kv("Wf Group", s.wfGrp),
 		"",
 		cardLabelStyle.Render("Command:"),
-		"  " + lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Render(hint),
+		"  " + lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Render(hint),
 	}
 	fmt.Println(cardStyle.Render(strings.Join(lines, "\n")))
 	fmt.Println(hintStyle.Render("  Copy and run the command above to execute."))
 	fmt.Println()
 
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().Title("").Affirmative("Back to menu").Negative("Exit").Value(new(bool)),
 	)).Run()
 }
@@ -877,7 +897,7 @@ func (s *session) artifactsMenu() {
 	fmt.Println(response)
 	fmt.Println()
 
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().Title("").Affirmative("Back to menu").Negative("Exit").Value(new(bool)),
 	)).Run()
 }
@@ -899,7 +919,7 @@ func (s *session) gitScanMenu() {
 	maxReposStr = "0"
 	outputPath = "sg-payload.json"
 
-	err := huh.NewForm(
+	err := newForm(
 		huh.NewGroup(
 			huh.NewSelect[string]().
 				Title("VCS Provider").
@@ -977,7 +997,7 @@ func (s *session) gitScanMenu() {
 	scan.RunScan(opts)
 	fmt.Println()
 
-	_ = huh.NewForm(huh.NewGroup(
+	_ = newForm(huh.NewGroup(
 		huh.NewConfirm().Title("").Affirmative("Back to menu").Negative("Exit").Value(new(bool)),
 	)).Run()
 }

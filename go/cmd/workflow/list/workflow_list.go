@@ -90,7 +90,7 @@ func NewListCmd(c *client.Client) *cobra.Command {
 // ---------------------------------------------------------------------------
 
 func renderPlainList(workflows []*sggosdk.GeneratedWorkflowsListAllMsg) {
-	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Bold(true)
+	nameStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Bold(true)
 	descStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280"))
 	statusStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#22C55E"))
 
@@ -112,11 +112,11 @@ func renderPlainList(workflows []*sggosdk.GeneratedWorkflowsListAllMsg) {
 // ---------------------------------------------------------------------------
 
 var (
-	titleStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED")).Bold(true).Padding(0, 1)
+	titleStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#88B7DA")).Bold(true).Padding(0, 1)
 	itemStyle     = lipgloss.NewStyle().Padding(0, 2)
 	selectedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#F9FAFB")).
-			Background(lipgloss.Color("#7C3AED")).
+			Background(lipgloss.Color("#88B7DA")).
 			Bold(true).
 			Padding(0, 2)
 	descriptionStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280")).Padding(0, 4)
@@ -128,7 +128,7 @@ var (
 				Padding(0, 1)
 	detailBoxStyle = lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#7C3AED")).
+			BorderForeground(lipgloss.Color("#88B7DA")).
 			Padding(1, 2).
 			Margin(1, 0)
 	statusColors = map[string]lipgloss.Color{
