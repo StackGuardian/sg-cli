@@ -339,3 +339,85 @@ payload.json will look like the following:
     "WfType": "CUSTOM",
 }
 ```
+
+---
+
+### Git VCS Scan + Bulk Import
+
+Scan a GitHub or GitLab organization for Terraform repositories and generate a bulk workflow payload ready for import.
+
+**Step 1: Scan your VCS org**
+
+```bash
+# GitHub
+./sg-cli git-scan scan --provider github --token ghp_xxx --org my-org
+
+# GitLab
+./sg-cli git-scan scan --provider gitlab --token glpat-xxx --org my-group
+
+# With options
+./sg-cli git-scan scan --provider github --token ghp_xxx --org my-org \
+  --max-repos 50 \
+  --wfgrp imported-workflows \
+  --vcs-auth /integrations/github_com \
+  --output sg-payload.json
+```
+
+**CLI options:**
+
+| Flag | Description |
+|---|---|
+| `--provider`, `-p` | VCS provider: `github` or `gitlab` (required) |
+| `--token`, `-t` | VCS access token (required) |
+| `--org`, `-o` | GitHub organization or GitLab group |
+| `--user`, `-u` | Scan repos for a specific user instead of an org |
+| `--max-repos`, `-m` | Maximum repositories to scan (0 = no limit) |
+| `--include-archived` | Include archived repositories |
+| `--include-forks` | Include forked repositories |
+| `--wfgrp` | Workflow group name written into payload (default: `imported-workflows`) |
+| `--vcs-auth` | SG VCS integration path (e.g., `/integrations/github_com`) |
+| `--managed-state` | Enable SG-managed Terraform state |
+| `--output`, `-O` | Output file (default: `sg-payload.json`) |
+| `--quiet`, `-q` | Minimal output |
+| `--verbose`, `-v` | Debug output |
+
+The scanner detects Terraform directories, infers cloud provider from HCL provider blocks, parses Terraform version from `required_version`, and handles monorepos (each subdirectory becomes a separate workflow).
+
+**Step 2: Review and edit sg-payload.json**
+
+Before importing, fill in the fields the scanner cannot infer automatically:
+
+- `DeploymentPlatformConfig` — Cloud connector integration ID (AWS/Azure/GCP)
+- `VCSConfig.customSource.config.auth` — VCS integration path for private repos
+- `RunnerConstraints` — `shared` or private runner group
+
+**Step 3: Bulk import to StackGuardian**
+
+```bash
+export SG_API_TOKEN=<YOUR_SG_API_TOKEN>
+./sg-cli workflow create --bulk --org "<ORG NAME>" -- sg-payload.json
+```
+
+---
+
+### Interactive Mode
+
+sg-cli includes a terminal UI for browsing and managing resources without remembering command syntax.
+
+```bash
+./sg-cli interactive
+# or
+./sg-cli i
+```
+
+On launch you will be prompted for your **org** and **workflow group**, which are remembered for the session. From the main menu you can:
+
+- **Workflows** — list, inspect, and create workflows (single or bulk)
+- **Stacks** — list and inspect stacks
+- **Artifacts** — browse workflow and stack artifacts
+- **Git Scan** — run the VCS scanner interactively
+- **Switch Context** — change org / workflow group mid-session
+
+Navigation: arrow keys to move, Enter to select, Ctrl+C or `q` to go back / exit.
+
+<img width="403" height="305" alt="image" src="https://github.com/user-attachments/assets/da7a48ed-f10a-4c46-be4f-748978db814e" />
