@@ -344,27 +344,19 @@ payload.json will look like the following:
 
 ### Git VCS Scan + Bulk Import
 
-Scan a GitHub or GitLab organization for Terraform repositories and generate a bulk workflow payload for sg-cli.
+Scan a GitHub or GitLab organization for Terraform repositories and generate a bulk workflow payload ready for import.
 
-**Step 1: Install the scanner**
-
-```bash
-git clone https://github.com/StackGuardian/stackguardian-migrator.git
-cd stackguardian-migrator/transformer/git-vcs
-pip install .
-```
-
-**Step 2: Scan your VCS org**
+**Step 1: Scan your VCS org**
 
 ```bash
 # GitHub
-sg-git-scan --provider github --token ghp_xxx --org my-org
+./sg-cli git-scan scan --provider github --token ghp_xxx --org my-org
 
 # GitLab
-sg-git-scan --provider gitlab --token glpat-xxx --org my-group
+./sg-cli git-scan scan --provider gitlab --token glpat-xxx --org my-group
 
 # With options
-sg-git-scan --provider github --token ghp_xxx --org my-org \
+./sg-cli git-scan scan --provider github --token ghp_xxx --org my-org \
   --max-repos 50 \
   --wfgrp imported-workflows \
   --vcs-auth /integrations/github_com \
@@ -378,11 +370,11 @@ sg-git-scan --provider github --token ghp_xxx --org my-org \
 | `--provider`, `-p` | VCS provider: `github` or `gitlab` (required) |
 | `--token`, `-t` | VCS access token (required) |
 | `--org`, `-o` | GitHub organization or GitLab group |
-| `--user`, `-u` | User whose repos to scan |
-| `--max-repos`, `-m` | Maximum repositories to scan |
+| `--user`, `-u` | Scan repos for a specific user instead of an org |
+| `--max-repos`, `-m` | Maximum repositories to scan (0 = no limit) |
 | `--include-archived` | Include archived repositories |
 | `--include-forks` | Include forked repositories |
-| `--wfgrp` | Workflow group name (default: `imported-workflows`) |
+| `--wfgrp` | Workflow group name written into payload (default: `imported-workflows`) |
 | `--vcs-auth` | SG VCS integration path (e.g., `/integrations/github_com`) |
 | `--managed-state` | Enable SG-managed Terraform state |
 | `--output`, `-O` | Output file (default: `sg-payload.json`) |
@@ -391,7 +383,7 @@ sg-git-scan --provider github --token ghp_xxx --org my-org \
 
 The scanner detects Terraform directories, infers cloud provider from HCL provider blocks, parses Terraform version from `required_version`, and handles monorepos (each subdirectory becomes a separate workflow).
 
-**Step 3: Review and edit sg-payload.json**
+**Step 2: Review and edit sg-payload.json**
 
 Before importing, fill in the fields the scanner cannot infer automatically:
 
@@ -399,7 +391,7 @@ Before importing, fill in the fields the scanner cannot infer automatically:
 - `VCSConfig.customSource.config.auth` — VCS integration path for private repos
 - `RunnerConstraints` — `shared` or private runner group
 
-**Step 4: Bulk import to StackGuardian**
+**Step 3: Bulk import to StackGuardian**
 
 ```bash
 export SG_API_TOKEN=<YOUR_SG_API_TOKEN>
