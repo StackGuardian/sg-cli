@@ -4,6 +4,16 @@
 
 ----------
 
+<details>
+<summary>Click to expand</summary>
+
+### Hidden Details
+This content can be revealed or hidden.
+- Supports Markdown
+- Supports code blocks
+
+</details>
+
 ## Contents
 
 -   [Setup](#setup)
