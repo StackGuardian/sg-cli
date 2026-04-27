@@ -34,7 +34,6 @@ Set the following environment variables:
 |---|---|---|---|
 | `SG_API_TOKEN` | Yes | — | Your StackGuardian API token. Find this in your account settings. |
 | `SG_BASE_URL` | No | `https://api.app.stackguardian.io` | StackGuardian API base URL. |
-| `SG_DASHBOARD_URL` | No | `https://app.stackguardian.io/orchestrator` | StackGuardian dashboard URL. |
 
 The `sg-cli` also requires [jq](https://jqlang.github.io/jq/download/) for JSON processing. Install it before running any commands.
 
