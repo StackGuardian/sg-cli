@@ -1,39 +1,66 @@
 ## StackGuardian CLI (sg-cli)
 
-> **Note:** This repository hosts release binaries only. The source code is
-> maintained in a private repository. Issues, pull requests, and discussions
-> are not monitored here — please reach out via [support@stackguardian.io](mailto:support@stackguardian.io)
-> or your usual support channel.
+> **Note:** This repository hosts release binaries only. The source code is maintained in a private repository. Issues, pull requests, and discussions are not monitored here — please reach out via [support@stackguardian.io](mailto:support@stackguardian.io) or your usual support channel.
 
-### 1: Setup
+----------
 
-Required environment variables:
-```
-SG_BASE_URL (default: https://api.app.stackguardian.io)
-SG_API_TOKEN
-SG_DASHBOARD_URL (default: https://app.stackguardian.io/orchestrator)
-```
-Install jq in your environment: https://jqlang.github.io/jq/download/
+## Contents
 
-### 2: Required input
+-   [Setup](#setup)
+-   [Usage](#usage)
+    -   [Required arguments](#required-arguments)
+    -   [Optional arguments](#optional-arguments)
+    -   [Passing a JSON payload](#passing-a-json-payload)
+-   [Examples](#examples)
+    -   [Example 1: Simple run](#example-1-simple-run)
+    -   [Example 2: Override ResourceName](#example-2-override-resourcename)
+    -   [Example 3: Patch payload fields](#example-3-patch-payload-fields)
+    -   [Example 4: Unset an array](#example-4-unset-an-array)
+    -   [Example 5: Add a new key](#example-5-add-a-new-key)
+    -   [Example 6: Bulk onboard cloud accounts](#example-6-bulk-onboard-cloud-accounts)
+    -   [Example 7: Bulk create workflows with tfstate files](#example-7-bulk-create-workflows-with-tfstate-files)
+    -   [Example 8: Run compliance discovery against integrations](#example-8-run-compliance-discovery-against-integrations)
+-   [Git VCS scan and bulk import](#git-vcs-scan-and-bulk-import)
+-   [Interactive mode](#interactive-mode)
 
-Script accepts JSON payload for the final input.
-Payload holds information about `ResourceName`, `TemplateConfig` and so on.
+----------
 
-### 3: Running script
+## Setup
 
-When running just
+
+Set the following environment variables:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SG_API_TOKEN` | Yes | — | Your StackGuardian API token. Find this in your account settings. |
+| `SG_BASE_URL` | No | `https://api.app.stackguardian.io` | StackGuardian API base URL. |
+| `SG_DASHBOARD_URL` | No | `https://app.stackguardian.io/orchestrator` | StackGuardian dashboard URL. |
+
+The `sg-cli` also requires [jq](https://jqlang.github.io/jq/download/) for JSON processing. Install it before running any commands.
+
+----------
+
+## Usage
+
+The script accepts a JSON payload as its final input. The payload holds information about `ResourceName`, `TemplateConfig`, and so on.
+
+Run the following to see the help menu:
+
 ```
 ./sg-cli stack create
-```
-help menu will be shown with more details.
 
-There are required arguments that need to be passed when running script:
+```
+
+### Required arguments
+
 ```
 --org
 --workflow-group
+
 ```
-and optional like:
+
+### Optional arguments
+
 ```
 --wait
 --run
@@ -41,13 +68,20 @@ and optional like:
 --dry-run
 --stack-name
 --patch-payload
-```
-JSON payload is passed at the end of all arguments after `--`.
-Only one arguments is accepted after `--`, providing more will result in error.
-Any argument (optional, required) needs to be passed before `--`, in any order.
 
-If we have payload like following
 ```
+
+### Passing a JSON payload
+
+Pass the JSON payload at the end of all arguments, after `--`. Only one argument is accepted after `--` — providing more will result in an error. All other arguments (required and optional) must be passed before `--`, in any order.
+
+----------
+
+## Examples
+
+The examples below use the following base payload:
+
+```json
 {
   "ResourceName": "test",
   "TemplatesConfig": {
@@ -66,33 +100,45 @@ If we have payload like following
     ]
   }
 }
+
 ```
 
-Example 1: (simple run with prefilled payload.json)
+### Example 1: Simple run
+
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp -- payload.json
+
 ```
 
-Example 2: (override ResourceName (workflow-stack name))
+### Example 2: Override ResourceName
+
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --resourceName custom_name -- payload.json
 
 ```
-Payload from before will have updated:
-```
+
+The payload will be updated:
+
+```json
 {
   "ResourceName": "custom_name",
   ...
 }
+
 ```
 
-Example 3: (patch anything inside payload.json)
-> make sure to surround patch json in single quotes `''`, and each key and value with `""`
+### Example 3: Patch payload fields
+
+> Make sure to surround the patch JSON in single quotes `''`, and each key and value with `""`.
+
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"ResourceName": "custom_name", "TemplatesConfig": {"templates": [{"ResourceName": "first_item"}]}}' -- payload.json
+
 ```
-Paylod will look like the following:
-```
+
+The payload will look like the following:
+
+```json
 {
   "ResourceName": "custom_name",
   "TemplatesConfig": {
@@ -111,15 +157,21 @@ Paylod will look like the following:
     ]
   }
 }
+
 ```
 
-Example 4: (unset array)
+### Example 4: Unset an array
+
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"TemplatesConfig": {"templates": []}}' -- payload.json
+
 ```
-Payload will look like the follwing:
-> when array is set to `[]`, it will use default value
-```
+
+> When an array is set to `[]`, it will use the default value.
+
+The payload will look like the following:
+
+```json
 {
   "ResourceName": "test",
   "TemplatesConfig": {
@@ -127,30 +179,39 @@ Payload will look like the follwing:
     "templates": []
   }
 }
+
 ```
 
-Example 5: (add new key)
+### Example 5: Add a new key
+
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"custom_key": "custom_value"}' -- payload.json
+
 ```
-Payload will look like the follwing:
-> new key/value will be added to payload
-```
+
+> The new key/value will be added to the payload.
+
+The payload will look like the following:
+
+```json
 {
   "ResourceName": "test",
   ...
   "custom_key": "custom_value"
 }
+
 ```
 
-Example 6: Bulk onboard cloud accounts
+### Example 6: Bulk onboard cloud accounts
+
 ```
-./sg-cli aws integrate --org demo-org  -- payload.json
+./sg-cli aws integrate --org demo-org -- payload.json
+
 ```
 
-Payload will look like the follwing:
-> It should contain an array of AWS account objects under the key `awsAccounts`
-```
+> The payload must contain an array of AWS account objects under the key `awsAccounts`.
+
+```json
 {
   "awsAccounts": [
     {
@@ -183,32 +244,35 @@ Payload will look like the follwing:
     }
   ]
 }
+
 ```
 
-Example 7: Bulk create workflows with tfstate files
+### Example 7: Bulk create workflows with tfstate files
+
 ```
-./sg-cli workflow create --bulk --org demo-org --workflow-group demo-grp  -- payload.json
+./sg-cli workflow create --bulk --org demo-org --workflow-group demo-grp -- payload.json
+
 ```
 
-payload.json will look like the following:
->  payload.json should contain an array of workflow objects
-```
+> The payload must contain an array of workflow objects.
+
+```json
 [
   {
     "Approvers": [],
     "CLIConfiguration": {
       "TfStateFilePath": "/Users/richie/Documents/StackGuardian/stackguardian-migrator/transformer/tfc/../../out/state-files/aws-terraform.tfstate",
-      "WorkflowGroup": {"name":"test2"} 
+      "WorkflowGroup": {"name":"test2"}
     },
     "DeploymentPlatformConfig": [
-        {
-          "kind": "AWS_RBAC", 
-          "config": {
-            "integrationId": "/integrations/xyz", 
-            "profileName": "default" 
-          }
+      {
+        "kind": "AWS_RBAC",
+        "config": {
+          "integrationId": "/integrations/xyz",
+          "profileName": "default"
         }
-      ],
+      }
+    ],
     "Description": "",
     "EnvironmentVariables": [],
     "MiniSteps": {
@@ -254,17 +318,17 @@ payload.json will look like the following:
     "Approvers": [],
     "CLIConfiguration": {
       "TfStateFilePath": "/Users/richie/Documents/StackGuardian/stackguardian-migrator/transformer/tfc/../../out/state-files/aws-terraform.tfstate",
-      "WorkflowGroup": {"name":"test1"} 
+      "WorkflowGroup": {"name":"test1"}
     },
     "DeploymentPlatformConfig": [
-        {
-          "kind": "AWS_RBAC", 
-          "config": {
-            "integrationId": "/integrations/xyz", 
-            "profileName": "default" 
-          }
+      {
+        "kind": "AWS_RBAC",
+        "config": {
+          "integrationId": "/integrations/xyz",
+          "profileName": "default"
         }
-      ],
+      }
+    ],
     "Description": "",
     "EnvironmentVariables": [],
     "MiniSteps": {
@@ -307,18 +371,18 @@ payload.json will look like the following:
     "WfType": "TERRAFORM"
   }
 ]
+
 ```
 
+### Example 8: Run compliance discovery against integrations
 
-Example 8: Run Compliance discovery against integrations
 ```
 ./sg-cli compliance aws --org demo-org --region eu-central-1 --integration-name aws-integ -- payload.json
 ./sg-cli compliance azure --org demo-org --integration-name aws-integ -- payload.json
+
 ```
 
-payload.json will look like the following:
->  payload.json example
-```
+```json
 {
     "VCSConfig": {},
     "WfStepsConfig": [
@@ -336,13 +400,14 @@ payload.json will look like the following:
             }
         }
     ],
-    "WfType": "CUSTOM",
+    "WfType": "CUSTOM"
 }
+
 ```
 
----
+----------
 
-### Git VCS Scan + Bulk Import
+## Git VCS scan and bulk import
 
 Scan a GitHub or GitLab organization for Terraform repositories and generate a bulk workflow payload ready for import.
 
@@ -361,9 +426,11 @@ Scan a GitHub or GitLab organization for Terraform repositories and generate a b
   --wfgrp imported-workflows \
   --vcs-auth /integrations/github_com \
   --output sg-payload.json
+
 ```
 
 **CLI options:**
+
 
 | Flag | Description |
 |---|---|
@@ -387,36 +454,38 @@ The scanner detects Terraform directories, infers cloud provider from HCL provid
 
 Before importing, fill in the fields the scanner cannot infer automatically:
 
-- `DeploymentPlatformConfig` — Cloud connector integration ID (AWS/Azure/GCP)
-- `VCSConfig.customSource.config.auth` — VCS integration path for private repos
-- `RunnerConstraints` — `shared` or private runner group
+-   `DeploymentPlatformConfig` — Cloud connector integration ID (AWS/Azure/GCP)
+-   `VCSConfig.customSource.config.auth` — VCS integration path for private repos
+-   `RunnerConstraints` — `shared` or private runner group
 
 **Step 3: Bulk import to StackGuardian**
 
 ```bash
 export SG_API_TOKEN=<YOUR_SG_API_TOKEN>
 ./sg-cli workflow create --bulk --org "<ORG NAME>" -- sg-payload.json
+
 ```
 
----
+----------
 
-### Interactive Mode
+## Interactive mode
 
-sg-cli includes a terminal UI for browsing and managing resources without remembering command syntax.
+`sg-cli` includes a terminal UI for browsing and managing resources without remembering command syntax.
 
 ```bash
 ./sg-cli interactive
 # or
 ./sg-cli i
+
 ```
 
 On launch you will be prompted for your **org** and **workflow group**, which are remembered for the session. From the main menu you can:
 
-- **Workflows** — list, inspect, and create workflows (single or bulk)
-- **Stacks** — list and inspect stacks
-- **Artifacts** — browse workflow and stack artifacts
-- **Git Scan** — run the VCS scanner interactively
-- **Switch Context** — change org / workflow group mid-session
+-   **Workflows** — list, inspect, and create workflows (single or bulk)
+-   **Stacks** — list and inspect stacks
+-   **Artifacts** — browse workflow and stack artifacts
+-   **Git Scan** — run the VCS scanner interactively
+-   **Switch Context** — change org / workflow group mid-session
 
 Navigation: arrow keys to move, Enter to select, Ctrl+C or `q` to go back / exit.
 
