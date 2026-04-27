@@ -4,16 +4,6 @@
 
 ----------
 
-<details>
-<summary>Click to expand</summary>
-
-### Hidden Details
-This content can be revealed or hidden.
-- Supports Markdown
-- Supports code blocks
-
-</details>
-
 ## Contents
 
 -   [Setup](#setup)
@@ -111,15 +101,18 @@ The examples below use the following base payload:
 }
 
 ```
+<details>
+<summary>Example 1: Simple run</summary>
 
-### Example 1: Simple run
+### Hidden Details
+This content can be revealed or hidden.
+- Supports Markdown
+- Supports code blocks
 
-```
-./sg-cli stack create --org demo-org --workflow-group integration-wfgrp -- payload.json
+</details>
 
-```
-
-### Example 2: Override ResourceName
+<details>
+<summary>Example 2: Override ResourceName</summary>
 
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --resourceName custom_name -- payload.json
@@ -135,8 +128,10 @@ The payload will be updated:
 }
 
 ```
+</details>
 
-### Example 3: Patch payload fields
+<details>
+<summary>Example 3: Patch payload fields</summary>
 
 > Make sure to surround the patch JSON in single quotes `''`, and each key and value with `""`.
 
@@ -168,8 +163,10 @@ The payload will look like the following:
 }
 
 ```
+</details>
 
-### Example 4: Unset an array
+<details>
+<summary>Example 4: Unset an array</summary>
 
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"TemplatesConfig": {"templates": []}}' -- payload.json
@@ -190,8 +187,10 @@ The payload will look like the following:
 }
 
 ```
+</details>
 
-### Example 5: Add a new key
+<details>
+<summary>Example 5: Add a new key</summary>
 
 ```
 ./sg-cli stack create --org demo-org --workflow-group integration-wfgrp --patch-payload '{"custom_key": "custom_value"}' -- payload.json
@@ -210,8 +209,10 @@ The payload will look like the following:
 }
 
 ```
+</details>
 
-### Example 6: Bulk onboard cloud accounts
+<details>
+<summary>Example 6: Bulk onboard cloud accounts</summary>
 
 ```
 ./sg-cli aws integrate --org demo-org -- payload.json
@@ -255,8 +256,10 @@ The payload will look like the following:
 }
 
 ```
+</details>
 
-### Example 7: Bulk create workflows with tfstate files
+<details>
+<summary>Example 7: Bulk create workflows with tfstate files</summary>
 
 ```
 ./sg-cli workflow create --bulk --org demo-org --workflow-group demo-grp -- payload.json
@@ -382,8 +385,10 @@ The payload will look like the following:
 ]
 
 ```
+</details>
 
-### Example 8: Run compliance discovery against integrations
+<details>
+<summary>Example 8: Run compliance discovery against integrations</summary>
 
 ```
 ./sg-cli compliance aws --org demo-org --region eu-central-1 --integration-name aws-integ -- payload.json
@@ -413,7 +418,7 @@ The payload will look like the following:
 }
 
 ```
-
+</details>
 ----------
 
 ## Git VCS scan and bulk import
