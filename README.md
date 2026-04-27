@@ -2,7 +2,7 @@
 
 > **Note:** This repository hosts release binaries only. The source code is maintained in a private repository. Issues, pull requests, and discussions are not monitored here — please reach out via [support@stackguardian.io](mailto:support@stackguardian.io) or your usual support channel.
 
-----------
+---
 
 ## Contents
 
@@ -12,18 +12,10 @@
     -   [Optional arguments](#optional-arguments)
     -   [Passing a JSON payload](#passing-a-json-payload)
 -   [Examples](#examples)
-    -   [Example 1: Simple run](#example-1-simple-run)
-    -   [Example 2: Override ResourceName](#example-2-override-resourcename)
-    -   [Example 3: Patch payload fields](#example-3-patch-payload-fields)
-    -   [Example 4: Unset an array](#example-4-unset-an-array)
-    -   [Example 5: Add a new key](#example-5-add-a-new-key)
-    -   [Example 6: Bulk onboard cloud accounts](#example-6-bulk-onboard-cloud-accounts)
-    -   [Example 7: Bulk create workflows with tfstate files](#example-7-bulk-create-workflows-with-tfstate-files)
-    -   [Example 8: Run compliance discovery against integrations](#example-8-run-compliance-discovery-against-integrations)
 -   [Git VCS scan and bulk import](#git-vcs-scan-and-bulk-import)
 -   [Interactive mode](#interactive-mode)
 
-----------
+---
 
 ## Setup
 
@@ -37,7 +29,7 @@ Set the following environment variables:
 
 The `sg-cli` also requires [jq](https://jqlang.github.io/jq/download/) for JSON processing. Install it before running any commands.
 
-----------
+---
 
 ## Usage
 
@@ -74,7 +66,7 @@ Run the following to see the help menu:
 
 Pass the JSON payload at the end of all arguments, after `--`. Only one argument is accepted after `--` — providing more will result in an error. All other arguments (required and optional) must be passed before `--`, in any order.
 
-----------
+---
 
 ## Examples
 
@@ -419,7 +411,8 @@ The payload will look like the following:
 
 ```
 </details>
-----------
+
+---
 
 ## Git VCS scan and bulk import
 
@@ -444,7 +437,6 @@ Scan a GitHub or GitLab organization for Terraform repositories and generate a b
 ```
 
 **CLI options:**
-
 
 | Flag | Description |
 |---|---|
@@ -480,7 +472,7 @@ export SG_API_TOKEN=<YOUR_SG_API_TOKEN>
 
 ```
 
-----------
+---
 
 ## Interactive mode
 
