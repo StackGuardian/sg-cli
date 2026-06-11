@@ -1903,7 +1903,7 @@ main() { #{{{
 
 #{{{ Check Inputs
 if [ -z "${API_TOKEN}" ] || { [ "${API_TOKEN:0:4}" != "sgu_" ] && [ "${API_TOKEN:0:4}" != "sgo_" ]; }; then
-    err "Invalid or no API Token provided. Expecting it in \"SG_API_TOKEN\" environment variable. Navigate to StackGuardian platform to get your api token: ${DASHBOARD_URL}/orgs/${org}/settings?tab=api_key"
+    err "Invalid or no API Token provided. Expecting a personal (sgu_) or organization (sgo_) token in \"SG_API_TOKEN\" environment variable. Navigate to StackGuardian platform to get your api token: ${DASHBOARD_URL}/orgs/${org}/settings?tab=api_key"
     exit 1
 fi
 
