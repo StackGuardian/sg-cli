@@ -45,7 +45,7 @@ func newSearchCmd(c *client.Client) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			common.Done(cmd, response, "Search completed.")
+			common.PrintJSON(cmd, response)
 			return nil
 		},
 	}
@@ -54,6 +54,5 @@ func newSearchCmd(c *client.Client) *cobra.Command {
 	cmd.Flags().Int("limit", 0, "Maximum number of results.")
 	cmd.Flags().String("last-evaluated-key", "", "Pagination token from a previous response.")
 	common.AddPayloadFlags(cmd)
-	common.AddOutputJSONFlag(cmd)
 	return cmd
 }

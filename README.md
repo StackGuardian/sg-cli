@@ -14,6 +14,7 @@
 -   [Examples](#examples)
 -   [Git VCS scan and bulk import](#git-vcs-scan-and-bulk-import)
 -   [Interactive mode](#interactive-mode)
+-   [Go CLI](#go-cli)
 
 ---
 
@@ -496,3 +497,17 @@ On launch you will be prompted for your **org** and **workflow group**, which ar
 Navigation: arrow keys to move, Enter to select, Ctrl+C or `q` to go back / exit.
 
 <img width="403" height="305" alt="image" src="https://github.com/user-attachments/assets/da7a48ed-f10a-4c46-be4f-748978db814e" />
+
+---
+
+## Go CLI
+
+The `go/` directory contains a Go implementation of `sg-cli` built on
+[`sg-sdk-go`](https://github.com/StackGuardian/sg-sdk-go). It covers every
+API operation exposed by the SDK (organizations, users, roles, API accesses,
+secrets, policies, connectors, connector groups, runner groups, state backends,
+workflow groups, workflows and runs, stacks and stack runs, templates and
+revisions, chats, billing, audit logs and more) with the same `--org`,
+`--patch-payload`, `--preview` and `--dry-run` conventions as the shell
+script. See [go/README.md](go/README.md) for the build steps, the command
+groups and examples.

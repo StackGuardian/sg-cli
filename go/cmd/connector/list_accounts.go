@@ -31,11 +31,10 @@ func newListAccountsCmd(c *client.Client) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			common.Done(cmd, response, "Accounts listed.")
+			common.PrintJSON(cmd, response)
 			return nil
 		},
 	}
 	common.AddPayloadFlags(cmd)
-	common.AddOutputJSONFlag(cmd)
 	return cmd
 }

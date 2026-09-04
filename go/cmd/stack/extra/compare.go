@@ -44,7 +44,7 @@ func newCompareCmd(c *client.Client) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			common.Done(cmd, response, "Comparison completed.")
+			common.PrintJSON(cmd, response)
 			return nil
 		},
 	}
@@ -53,6 +53,5 @@ func newCompareCmd(c *client.Client) *cobra.Command {
 	cmd.Flags().String("target-template-group-id", "", "Stack template to compare against.")
 	cmd.Flags().String("upgrade-mode", "", "Upgrade mode to simulate.")
 	common.AddPayloadFlags(cmd)
-	common.AddOutputJSONFlag(cmd)
 	return cmd
 }

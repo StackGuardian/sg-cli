@@ -54,6 +54,9 @@ func Execute() {
 }
 
 func init() {
+	// cmd.Println writes to stderr unless an output is set; responses and
+	// --output-json belong on stdout so they can be piped.
+	rootCmd.SetOut(os.Stdout)
 	c := common.NewClient()
 	rootCmd.AddCommand(workflow.NewWorkflowCmd(c))
 	rootCmd.AddCommand(stack.NewStackCmd(c))
