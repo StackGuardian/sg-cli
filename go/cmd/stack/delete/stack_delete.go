@@ -3,6 +3,7 @@ package delete
 import (
 	"context"
 	"fmt"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 	"strings"
 
@@ -37,7 +38,7 @@ func NewDeleteCmd(c *client.Client) *cobra.Command {
 			}
 
 			if opts.OutputJson && response != nil {
-				cmd.Println(response)
+				common.PrintJSON(cmd, response)
 			}
 			cmd.Println("Stack deleted successfully.")
 		},

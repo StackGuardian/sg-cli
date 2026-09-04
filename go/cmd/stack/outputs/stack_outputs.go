@@ -2,6 +2,7 @@ package outputs
 
 import (
 	"context"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 
 	"github.com/StackGuardian/sg-sdk-go/client"
@@ -25,7 +26,7 @@ func NewOutputsCmd(c *client.Client) *cobra.Command {
 				cmd.Println(err)
 				os.Exit(-1)
 			}
-			cmd.Println(response)
+			common.PrintJSON(cmd, response)
 		},
 	}
 

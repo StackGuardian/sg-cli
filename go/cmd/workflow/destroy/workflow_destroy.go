@@ -2,6 +2,7 @@ package destroy
 
 import (
 	"context"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 
 	sggosdk "github.com/StackGuardian/sg-sdk-go"
@@ -45,7 +46,7 @@ func NewDestroyCmd(c *client.Client) *cobra.Command {
 				os.Exit(-1)
 			}
 			if opts.OutputJson {
-				cmd.Println(response)
+				common.PrintJSON(cmd, response)
 			}
 			cmd.Println("Workflow destroy run successfully.")
 			workflowRunPath := DASHBOARD_URL +

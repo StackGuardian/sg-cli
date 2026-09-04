@@ -98,8 +98,8 @@ func TestReadWorkflow(t *testing.T) {
 				tc.expectedStruct.Msg.Authors,
 				actualResponse.Msg.Authors)
 		}
-		if actualResponse.Msg.Description != tc.expectedStruct.Msg.Description {
-			t.Fatalf("expected \"%s\" got \"%s\"",
+		if !reflect.DeepEqual(actualResponse.Msg.Description, tc.expectedStruct.Msg.Description) {
+			t.Fatalf("expected \"%v\" got \"%v\"",
 				tc.expectedStruct.Msg.Description,
 				actualResponse.Msg.Description)
 		}
