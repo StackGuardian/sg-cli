@@ -2,6 +2,7 @@ package list
 
 import (
 	"context"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 	"strings"
 
@@ -38,10 +39,10 @@ func NewListCmd(c *client.Client) *cobra.Command {
 			}
 
 			if opts.OutputJson {
-				cmd.Println(response)
+				common.PrintJSON(cmd, response)
 			}
 
-			cmd.Println(response)
+			common.PrintJSON(cmd, response)
 		},
 	}
 	listCmd.Flags().BoolVar(&opts.OutputJson, "output-json", false, "Output execution response as json to STDIN.")

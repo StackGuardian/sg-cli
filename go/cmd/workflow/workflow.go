@@ -7,6 +7,7 @@ import (
 	"github.com/StackGuardian/sg-cli/cmd/workflow/create"
 	"github.com/StackGuardian/sg-cli/cmd/workflow/delete"
 	"github.com/StackGuardian/sg-cli/cmd/workflow/destroy"
+	workflowextra "github.com/StackGuardian/sg-cli/cmd/workflow/extra"
 	"github.com/StackGuardian/sg-cli/cmd/workflow/list"
 	"github.com/StackGuardian/sg-cli/cmd/workflow/read"
 	"github.com/StackGuardian/sg-sdk-go/client"
@@ -42,6 +43,8 @@ func NewWorkflowCmd(c *client.Client) *cobra.Command {
 	workflowCmd.AddCommand(apply.NewApplyCmd(c))
 	workflowCmd.AddCommand(list.NewListCmd(c))
 	workflowCmd.AddCommand(destroy.NewDestroyCmd(c))
+
+	workflowextra.AddCommands(workflowCmd, c)
 
 	return workflowCmd
 }

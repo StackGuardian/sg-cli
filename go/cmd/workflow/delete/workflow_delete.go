@@ -2,6 +2,7 @@ package delete
 
 import (
 	"context"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 
 	"github.com/StackGuardian/sg-sdk-go/client"
@@ -38,7 +39,7 @@ func NewDeleteCmd(c *client.Client) *cobra.Command {
 				os.Exit(-1)
 			}
 			if opts.OutputJson {
-				cmd.Println(response)
+				common.PrintJSON(cmd, response)
 			}
 			cmd.Println("Workflow deleted successfully.")
 		},

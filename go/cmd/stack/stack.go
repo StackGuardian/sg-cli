@@ -7,6 +7,7 @@ import (
 	"github.com/StackGuardian/sg-cli/cmd/stack/create"
 	"github.com/StackGuardian/sg-cli/cmd/stack/delete"
 	"github.com/StackGuardian/sg-cli/cmd/stack/destroy"
+	stackextra "github.com/StackGuardian/sg-cli/cmd/stack/extra"
 	"github.com/StackGuardian/sg-cli/cmd/stack/outputs"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	"github.com/spf13/cobra"
@@ -39,6 +40,8 @@ func NewStackCmd(c *client.Client) *cobra.Command {
 	stackCmd.AddCommand(create.NewCreateCmd(c))
 	stackCmd.AddCommand(delete.NewDeleteCmd(c))
 	stackCmd.AddCommand(apply.NewApplyCmd(c))
+
+	stackextra.AddCommands(stackCmd, c)
 
 	return stackCmd
 }

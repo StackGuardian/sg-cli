@@ -3,6 +3,7 @@ package artifacts
 import (
 	"fmt"
 
+	artifactsextra "github.com/StackGuardian/sg-cli/cmd/artifacts/extra"
 	"github.com/StackGuardian/sg-cli/cmd/artifacts/list"
 	"github.com/StackGuardian/sg-sdk-go/client"
 	"github.com/spf13/cobra"
@@ -30,6 +31,8 @@ func NewArtifactsCmd(c *client.Client) *cobra.Command {
 	artifactsCmd.MarkPersistentFlagRequired("workflow-id")
 
 	artifactsCmd.AddCommand(list.NewListCmd(c))
+
+	artifactsextra.AddCommands(artifactsCmd, c)
 
 	return artifactsCmd
 }

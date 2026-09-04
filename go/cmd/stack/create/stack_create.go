@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 	"strings"
 
@@ -91,7 +92,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 				os.Exit(-1)
 			}
 			if opts.OutputJson {
-				cmd.Println(response)
+				common.PrintJSON(cmd, response)
 			}
 			cmd.Println("Stack created successfully.")
 

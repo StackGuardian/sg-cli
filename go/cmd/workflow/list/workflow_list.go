@@ -2,6 +2,7 @@ package list
 
 import (
 	"context"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"os"
 
 	sggosdk "github.com/StackGuardian/sg-sdk-go"
@@ -33,7 +34,7 @@ func NewListCmd(c *client.Client) *cobra.Command {
 			}
 
 			if opts.OutputJson {
-				cmd.Println(response)
+				common.PrintJSON(cmd, response)
 			}
 
 			for _, workflow := range response.Msg {

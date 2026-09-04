@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/StackGuardian/sg-cli/cmd/common"
 	"io"
 	"net/http"
 	"os"
@@ -13,12 +14,13 @@ import (
 	"github.com/StackGuardian/sg-cli/utilities"
 	sggosdk "github.com/StackGuardian/sg-sdk-go"
 	"github.com/StackGuardian/sg-sdk-go/client"
+	"github.com/StackGuardian/sg-sdk-go/workflows"
 	"github.com/spf13/cobra"
 )
 
 // Extend the Workflow struct from the sdk to add the new field for bulk
 type BulkWorkflow struct {
-	sggosdk.Workflow
+	workflows.Workflow
 	CLIConfiguration
 }
 
@@ -102,7 +104,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 
 				// Iterate over the slice of BulkWorkflow objects
 				for idx, bulkWorkflow := range createBulkWorkflowRequest {
-					var individualWorkflow *sggosdk.Workflow
+					var individualWorkflow *workflows.Workflow
 					// delete the CLIConfiguration field from the tempMap
 					delete(tempMap[idx], "CLIConfiguration")
 					// Convert map to []byte and then unmarshal to workflow object
@@ -116,7 +118,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 						cmd.PrintErrln(err)
 						continue
 					}
-					cmd.Println(">> Processing workflow: " + individualWorkflow.ResourceName.Value)
+					cmd.Println(">> Processing workflow: " + *individualWorkflow.ResourceName)
 					err = performPreExecutionFlagChecks(cmd, individualWorkflow, opts)
 					if err != nil {
 						cmd.PrintErrln(err)
@@ -136,14 +138,14 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 					)
 					if err != nil {
 						if !strings.Contains(err.Error(), "Workflow name not unique") {
-							cmd.PrintErrln(">> [ERROR] Processing workflow failed for resource name: " + individualWorkflow.ResourceName.Value + "\n")
+							cmd.PrintErrln(">> [ERROR] Processing workflow failed for resource name: " + *individualWorkflow.ResourceName + "\n")
 							cmd.PrintErrln(err)
 							continue
 						} else {
 							cmd.Println("Workflow already exists, updating instead...")
 							// convert to update workflow request
-							var updateIndividualWorkflow *sggosdk.PatchedWorkflow
-							err = json.Unmarshal(jsonBody, &individualWorkflow)
+							var updateIndividualWorkflow *workflows.PatchedWorkflow
+							err = json.Unmarshal(jsonBody, &updateIndividualWorkflow)
 							if err != nil {
 								cmd.PrintErrln(err)
 								continue
@@ -151,45 +153,47 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 							response, err := c.Workflows.UpdateWorkflow(
 								context.Background(),
 								opts.Org,
-								individualWorkflow.ResourceName.Value,
+								*individualWorkflow.ResourceName,
 								opts.WfgGrp,
+								nil,
 								updateIndividualWorkflow,
 							)
 							if err != nil {
-								cmd.PrintErrln(">> [ERROR] Updating workflow failed for resource name: " + *updateIndividualWorkflow.ResourceName + "\n")
+								cmd.PrintErrln(">> [ERROR] Updating workflow failed for resource name: " + *individualWorkflow.ResourceName + "\n")
 								cmd.PrintErrln(err)
 								continue
 							}
 							if opts.OutputJson {
-								cmd.Println(response)
+								common.PrintJSON(cmd, response)
 							}
 							cmd.Println("Workflow updated successfully.")
 
 							if bulkWorkflow.CLIConfiguration.CLIConfiguration.TfStateFilePath == "" {
-								cmd.Println("TfStateFilePath is not provided for workflow: " + bulkWorkflow.ResourceName.Value)
-								cmd.Println(">> Skipping update of state file..\n")
+								cmd.Println("TfStateFilePath is not provided for workflow: " + *bulkWorkflow.ResourceName)
+								cmd.Println(">> Skipping update of state file..")
+								cmd.Println()
 							} else {
 								cmd.Println(">> Attempting to upload state file..")
 								err = uploadTfState(cmd, &bulkWorkflow, opts)
 								if err != nil {
-									cmd.PrintErrln("Failed to upload state file for workflow: " + individualWorkflow.ResourceName.Value + "\n")
+									cmd.PrintErrln("Failed to upload state file for workflow: " + *individualWorkflow.ResourceName + "\n")
 									continue
 								}
 							}
 						}
 					} else {
 						if opts.OutputJson {
-							cmd.Println(response)
+							common.PrintJSON(cmd, response)
 						}
 						cmd.Println("Workflow created successfully.")
 						if bulkWorkflow.CLIConfiguration.CLIConfiguration.TfStateFilePath == "" {
-							cmd.PrintErrln("[ERROR] TfStateFilePath is not provided for workflow: " + bulkWorkflow.ResourceName.Value)
+							cmd.PrintErrln("[ERROR] TfStateFilePath is not provided for workflow: " + *bulkWorkflow.ResourceName)
 							cmd.PrintErrln(">> Skipping update of state file..")
 						} else {
 							cmd.Println(">> Attempting to upload state file..")
 							err = uploadTfState(cmd, &bulkWorkflow, opts)
 							if err != nil {
-								cmd.PrintErrln("Failed to upload state file for workflow: " + individualWorkflow.ResourceName.Value + "\n")
+								cmd.PrintErrln("Failed to upload state file for workflow: " + *individualWorkflow.ResourceName + "\n")
 							}
 						}
 						// Run on create
@@ -203,7 +207,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 							response, err := c.WorkflowRuns.CreateWorkflowRun(
 								context.Background(),
 								opts.Org,
-								bulkWorkflow.ResourceName.Value,
+								*bulkWorkflow.ResourceName,
 								opts.WfgGrp,
 								createWorkflowRunRequest,
 							)
@@ -213,7 +217,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 								continue
 							}
 							if opts.OutputJson {
-								cmd.Println(response)
+								common.PrintJSON(cmd, response)
 							}
 							cmd.Println("Workflow run created successfully.")
 							workflowRunPath := DASHBOARD_URL +
@@ -222,7 +226,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 								"/wfgrps/" +
 								opts.WfgGrp +
 								"/wfs/" +
-								bulkWorkflow.ResourceName.Value +
+								*bulkWorkflow.ResourceName +
 								"?tab=runs"
 							cmd.Println("To view the workflow run, please visit the following URL:")
 							cmd.Println(workflowRunPath)
@@ -232,7 +236,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 					}
 				}
 			} else {
-				var createWorkflowRequest *sggosdk.Workflow
+				var createWorkflowRequest *workflows.Workflow
 				var createWorkflowRunRequest *sggosdk.WorkflowRun
 				if opts.PatchPayload != "" && !opts.Bulk {
 					patchedJson := utilities.PatchJSON(string(payload), opts.PatchPayload)
@@ -286,7 +290,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 					response, err := c.WorkflowRuns.CreateWorkflowRun(
 						context.Background(),
 						opts.Org,
-						createWorkflowRequest.ResourceName.Value,
+						*createWorkflowRequest.ResourceName,
 						opts.WfgGrp,
 						createWorkflowRunRequest,
 					)
@@ -296,7 +300,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 						os.Exit(-1)
 					}
 					if opts.OutputJson {
-						cmd.Println(response)
+						common.PrintJSON(cmd, response)
 					}
 					cmd.Println("Workflow run created successfully.")
 					workflowRunPath := DASHBOARD_URL +
@@ -305,7 +309,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 						"/wfgrps/" +
 						opts.WfgGrp +
 						"/wfs/" +
-						createWorkflowRequest.ResourceName.Value +
+						*createWorkflowRequest.ResourceName +
 						"?tab=runs"
 					cmd.Println("To view the workflow run, please visit the following URL:")
 					cmd.Println(workflowRunPath)
@@ -322,7 +326,7 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 						os.Exit(-1)
 					}
 					if opts.OutputJson {
-						cmd.Println(response)
+						common.PrintJSON(cmd, response)
 					}
 					cmd.Println("Workflow created successfully.")
 				}
@@ -349,9 +353,9 @@ func NewCreateCmd(c *client.Client) *cobra.Command {
 }
 
 // performPreExecutionFlagChecks performs pre-execution flag checks and returns the payload
-func performPreExecutionFlagChecks(cmd *cobra.Command, payload *sggosdk.Workflow, opts *RunOptions) error {
+func performPreExecutionFlagChecks(cmd *cobra.Command, payload *workflows.Workflow, opts *RunOptions) error {
 
-	if payload.ResourceName == nil || payload.ResourceName.Value == "" {
+	if payload.ResourceName == nil || *payload.ResourceName == "" {
 		return errors.New(">> [ERROR] Workflow ResourceName is required in object payload, skipping")
 	}
 
@@ -385,11 +389,11 @@ func uploadTfState(cmd *cobra.Command, payload *BulkWorkflow, opts *RunOptions) 
 		"/wfgrps/" +
 		opts.WfgGrp +
 		"/wfs/" +
-		payload.ResourceName.Value +
+		*payload.ResourceName +
 		"/tfstate_upload_url"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln(err)
 		return err
 	}
@@ -398,25 +402,25 @@ func uploadTfState(cmd *cobra.Command, payload *BulkWorkflow, opts *RunOptions) 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln(err)
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln("Expected status code 200, got " + resp.Status)
 		return err
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln(err)
 		return err
 	}
 	var response tfStateUploadUrlResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to get tfstate upload url for workflow: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln(err)
 		return err
 	}
@@ -427,7 +431,7 @@ func uploadTfState(cmd *cobra.Command, payload *BulkWorkflow, opts *RunOptions) 
 	// Create a temporary directory to store the state file
 	tmpDir, err := os.MkdirTemp("", opts.Org+"-"+opts.WfgGrp)
 	if err != nil {
-		cmd.PrintErrln(">> [ERROR] Failed to create temp directory for state file upload: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to create temp directory for state file upload: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln(err)
 		return err
 	}
@@ -459,7 +463,7 @@ func uploadTfState(cmd *cobra.Command, payload *BulkWorkflow, opts *RunOptions) 
 	if strings.Contains(string(output), "HTTP/1.1 200 OK") {
 		cmd.Println(">> State file uploaded successfully.")
 	} else {
-		cmd.PrintErrln(">> [ERROR] Failed to upload state file for workflow: " + payload.ResourceName.Value + "\n")
+		cmd.PrintErrln(">> [ERROR] Failed to upload state file for workflow: " + *payload.ResourceName + "\n")
 		cmd.PrintErrln(string(output))
 	}
 
